@@ -1,0 +1,85 @@
+INDIAN INCOME TAX RULES — FY 2024-25 (AY 2025-26)
+
+SOURCE: Income Tax Act 1961, Finance Act 2024
+
+=== NEW TAX REGIME (DEFAULT) ===
+
+Income Slabs and Tax Rates (New Regime):
+- Up to ₹3,00,000: NIL
+- ₹3,00,001 – ₹7,00,000: 5%
+- ₹7,00,001 – ₹10,00,000: 10%
+- ₹10,00,001 – ₹12,00,000: 15%
+- ₹12,00,001 – ₹15,00,000: 20%
+- Above ₹15,00,000: 30%
+
+Rebate under Section 87A: If total income does not exceed ₹7,00,000, tax payable is NIL under new regime.
+Standard Deduction (New Regime): ₹75,000 for salaried individuals (Budget 2024 enhancement).
+
+=== OLD TAX REGIME (OPTIONAL) ===
+
+Income Slabs and Tax Rates (Old Regime):
+- Up to ₹2,50,000: NIL
+- ₹2,50,001 – ₹5,00,000: 5%
+- ₹5,00,001 – ₹10,00,000: 20%
+- Above ₹10,00,000: 30%
+
+Rebate under Section 87A (Old): If total income does not exceed ₹5,00,000, full tax rebate.
+
+=== KEY DEDUCTIONS (OLD REGIME ONLY) ===
+
+Section 80C — Investments & Payments (Max ₹1,50,000):
+- EPF (Employee Provident Fund) contributions
+- PPF (Public Provident Fund) — 15-year lock-in, 7.1% rate
+- ELSS (Equity Linked Savings Scheme) — 3-year lock-in, market-linked returns
+- NSC (National Savings Certificate)
+- Life Insurance premiums
+- Home loan principal repayment
+- Tuition fees for children (max 2 children)
+- Sukanya Samriddhi Yojana contributions
+
+Section 80D — Health Insurance Premiums:
+- Self + family: up to ₹25,000 (₹50,000 if senior citizen)
+- Parents: up to ₹25,000 (₹50,000 if senior citizens)
+- Preventive health check-up: up to ₹5,000 (within above limits)
+
+Section 80CCD(1B) — NPS additional contribution: ₹50,000 (over and above 80C)
+Section 24(b) — Home loan interest: up to ₹2,00,000 for self-occupied property
+Section 80E — Education loan interest: full deduction (no limit), up to 8 years
+Section 80G — Donations: 50%–100% depending on organization
+Section 80TTA — Savings account interest: up to ₹10,000
+
+=== HRA (HOUSE RENT ALLOWANCE) ===
+
+HRA exemption = MINIMUM of:
+1. Actual HRA received
+2. 50% of basic salary (metro cities: Mumbai, Delhi, Chennai, Kolkata)
+   OR 40% (non-metro)
+3. Actual rent paid minus 10% of basic salary
+
+=== CAPITAL GAINS TAX ===
+
+Equity Mutual Funds / Stocks:
+- Short-Term Capital Gain (STCG, held < 1 year): 15% (20% from July 2024 under Finance Act 2024)
+- Long-Term Capital Gain (LTCG, held > 1 year): 10% above ₹1,00,000 exemption (12.5% from July 2024)
+
+Debt Mutual Funds (post March 2023):
+- Taxed as per income tax slab (no LTCG benefit)
+
+Real Estate:
+- STCG (held < 2 years): taxed as per slab
+- LTCG (held > 2 years): 20% with indexation (12.5% without indexation from Budget 2024)
+
+=== ADVANCE TAX SCHEDULE ===
+
+If total tax liability > ₹10,000 in a year:
+- By June 15: 15% of tax
+- By September 15: 45% of tax
+- By December 15: 75% of tax
+- By March 15: 100% of tax
+
+=== FILING DEADLINES ===
+
+ITR filing deadline: July 31 (non-audit cases)
+ITR filing with audit: October 31
+Belated return: December 31 (with late fee)
+Late fee: ₹5,000 (₹1,000 if income < ₹5 lakh)

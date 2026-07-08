@@ -1,0 +1,108 @@
+PERSONAL BUDGETING FRAMEWORKS & GUIDELINES
+
+=== 1. THE 50/30/20 RULE ===
+
+Popularized by Senator Elizabeth Warren in "All Your Worth" (2005).
+
+How it works — split after-tax income into:
+- 50% Needs: rent/EMI, groceries, utilities, transportation, minimum debt payments, insurance
+- 30% Wants: dining out, entertainment, subscriptions, shopping, travel, hobbies
+- 20% Savings & Debt Repayment: emergency fund, retirement (EPF/PPF/NPS), investments, extra debt payments
+
+Example (₹60,000/month take-home):
+- Needs: ₹30,000 — rent ₹15,000 + groceries ₹5,000 + transport ₹3,000 + utilities ₹4,000 + insurance ₹3,000
+- Wants: ₹18,000 — Zomato ₹3,000 + subscriptions ₹2,000 + shopping ₹8,000 + entertainment ₹5,000
+- Savings: ₹12,000 — emergency fund ₹5,000 + SIP ₹5,000 + extra loan payment ₹2,000
+
+When to use: Best for beginners who want a simple, flexible budget.
+Limitation: "Needs" vs "Wants" distinction can be subjective.
+
+=== 2. ZERO-BASED BUDGETING (ZBB) ===
+
+Every rupee of income is assigned a purpose. Income minus all allocations = ₹0.
+
+Steps:
+1. List your monthly income (all sources)
+2. List all expenses (fixed + variable)
+3. Assign every rupee to a category
+4. If you have money left → allocate to savings or debt
+5. If you're in deficit → reduce discretionary categories
+
+Best for: People who want strict control over spending, debt repayment mode.
+Tool: YNAB (You Need A Budget), or a simple spreadsheet.
+
+=== 3. THE ENVELOPE METHOD ===
+
+Physical (or digital) envelopes for each spending category. When the envelope is empty, stop spending.
+
+Digital equivalents:
+- Separate savings accounts for each goal
+- Apps that segment your budget by category
+
+=== 4. PAY YOURSELF FIRST ===
+
+On the day your salary arrives, immediately transfer the savings amount to a separate account.
+Only spend from what remains.
+
+Recommended savings rate by life stage:
+- 20s (career start): 20–30% of income
+- 30s (family/home): 15–25%
+- 40s (peak earning): 25–35%
+- 50s+ (pre-retirement): 30–40%
+
+=== 5. DEBT AVALANCHE vs SNOWBALL ===
+
+Debt Avalanche (mathematically optimal):
+- Pay minimum on all debts
+- Put extra money toward the HIGHEST interest rate debt first
+- Minimizes total interest paid
+
+Debt Snowball (psychologically motivating):
+- Pay minimum on all debts
+- Put extra money toward the SMALLEST balance first
+- Builds momentum through quick wins
+
+=== SAVINGS BENCHMARKS (INDIA) ===
+
+Emergency Fund:
+- Target: 3–6 months of monthly expenses
+- 3 months if you have stable government/PSU job
+- 6 months if self-employed or in volatile sector
+- Where to keep: high-yield savings account (SBI Savings = 2.7%, HDFC = 3%), liquid funds (5–6.5% returns), or short-duration debt funds
+
+Retirement Savings:
+- Rule of thumb: save 15% of gross income for retirement from age 25
+- NPS: national pension system, employer can contribute, tax benefits under 80CCD
+- EPF: 12% of basic salary mandatory, employer matches 12% (8.33% to EPS, 3.67% to EPF)
+- PPF: voluntary, ₹500 min – ₹1.5L max per year, 15-year lock-in, tax-free returns
+
+Home Purchase Guideline:
+- EMI should not exceed 40% of monthly take-home pay
+- Down payment: ideally 20–25% of property value
+- Include stamp duty (4–7% in most states) + registration costs
+
+=== SUBSCRIPTION MANAGEMENT ===
+
+"Subscription creep" — the gradual accumulation of small recurring charges.
+
+Monthly subscription audit checklist:
+1. List ALL recurring charges (streaming, apps, gym, cloud storage, etc.)
+2. Identify which you used in the last 30 days
+3. Cancel any unused for > 2 months
+4. Negotiate annual plans (typically 15–30% cheaper than monthly)
+
+Rule of thumb: Total subscriptions should not exceed 5% of monthly income.
+
+=== SPENDING RATIO BENCHMARKS (INDIA, URBAN) ===
+
+Category                | % of Take-Home
+------------------------|----------------
+Housing (rent/EMI)      | 25–35%
+Food & Groceries        | 10–15%
+Transport               | 5–10%
+Utilities & Bills       | 3–5%
+Healthcare              | 2–4%
+Entertainment           | 3–8%
+Shopping/Clothing       | 3–7%
+Savings & Investments   | 20–30%
+Education               | 2–5%

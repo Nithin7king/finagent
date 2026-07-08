@@ -1,0 +1,89 @@
+INVESTING BASICS FOR INDIAN INVESTORS
+
+=== MUTUAL FUNDS ===
+
+A mutual fund pools money from many investors to buy a diversified portfolio of stocks, bonds, or other securities.
+
+Types:
+- Equity Funds: Invest in stocks. Higher risk, higher return potential.
+  - Large Cap: Top 100 companies by market cap. Stable, lower risk.
+  - Mid Cap: Companies ranked 101-250. Moderate risk/return.
+  - Small Cap: Companies ranked 251+. High risk, high return potential.
+  - ELSS (Tax-Saving): 3-year lock-in, qualifies for 80C deduction.
+  - Index Funds: Passively track NIFTY 50 or SENSEX. Low expense ratio (~0.1–0.5%).
+- Debt Funds: Invest in bonds and government securities. Lower risk, stable returns.
+  - Liquid Funds: Invest in instruments maturing in 91 days. For emergency fund parking.
+  - Short Duration: 1–3 year instruments. Better than FD for short-term goals.
+- Hybrid Funds: Mix of equity and debt. Balanced Advantage Funds adjust allocation dynamically.
+
+Key Metrics:
+- NAV (Net Asset Value): Price of one unit of the fund. Calculated daily.
+- Expense Ratio: Annual fee charged by fund house. Lower is better (< 1% for equity, < 0.5% for debt).
+- XIRR: Internal rate of return for SIP investments. Use to compare actual returns.
+- Exit Load: Fee for withdrawing before a certain period (e.g., 1% if redeemed within 1 year for most equity funds).
+
+=== SIP (SYSTEMATIC INVESTMENT PLAN) ===
+
+How it works: Invest a fixed amount (e.g., ₹5,000/month) on a fixed date. NAV varies each month (rupee cost averaging).
+
+Benefits:
+- Disciplines saving ("pay yourself first")
+- Reduces timing risk through rupee cost averaging
+- Can start with as low as ₹100/month (Groww, Zerodha, Paytm Money)
+- Power of compounding over long periods
+
+SIP Returns Calculator (approximate):
+- ₹5,000/month × 10 years × 12% annual return = ~₹11.6 lakhs invested → ~₹23.2 lakhs value
+- ₹5,000/month × 20 years × 12% annual return = ~₹24 lakhs invested → ~₹99.9 lakhs value
+
+=== PPF (PUBLIC PROVIDENT FUND) ===
+
+- Government-backed, sovereign guarantee
+- Interest rate: 7.1% per annum (set quarterly by government)
+- Annual investment: ₹500 minimum – ₹1,50,000 maximum
+- Lock-in: 15 years (partial withdrawal after 6 years, loan after 3 years)
+- Tax treatment: EEE (Exempt-Exempt-Exempt) — contribution, interest, maturity all tax-free
+- Where to open: Post office, SBI, any nationalized bank
+
+=== NPS (NATIONAL PENSION SYSTEM) ===
+
+- Market-linked pension scheme regulated by PFRDA
+- Two accounts: Tier I (pension, locked till 60) and Tier II (flexible, no tax benefit)
+- Asset classes: Equity (max 75%), Corporate bonds, Government securities
+- Tax benefits: 80CCD(1) up to ₹1.5L, additional 80CCD(1B) ₹50,000
+- At retirement: 60% tax-free lump sum, 40% must buy annuity (taxed as income)
+
+=== FD (FIXED DEPOSIT) ===
+
+- Guaranteed returns, DICGC insurance up to ₹5 lakhs per bank
+- Current rates (mid-2024): 6.5–7.5% for 1–3 years (major banks)
+- Tax: Interest taxable as per income slab. TDS @ 10% if interest > ₹40,000/year.
+- Senior Citizen FD: extra 0.25–0.5% above regular rates
+
+=== STOCK MARKET (DIRECT EQUITY) ===
+
+- BSE SENSEX: 30 large companies
+- NSE NIFTY 50: 50 large companies
+- Zerodha, Groww, Angel Broking: zero/low brokerage platforms
+- SEBI requirement: Mandatory KYC (PAN + Aadhaar)
+- Recommended for: Long-term investors (5+ year horizon) with risk tolerance
+
+=== ASSET ALLOCATION RULE OF THUMB ===
+
+Age-based equity allocation: 100 minus your age = % in equity
+- Age 25: 75% equity, 25% debt
+- Age 35: 65% equity, 35% debt  
+- Age 50: 50% equity, 50% debt
+- Age 60+: 30% equity, 70% debt
+
+More aggressive version: 120 minus age (for longer life expectancy, higher risk tolerance)
+
+=== EMERGENCY FUND vs INVESTING ===
+
+Priority order:
+1. Build 3-month emergency fund (liquid, accessible)
+2. Clear high-interest debt (credit cards > 20% → pay off before investing)
+3. Maximize employer EPF match (free money)
+4. Build to 6-month emergency fund
+5. Invest in diversified equity mutual funds (SIP)
+6. Additional tax-saving: PPF, NPS, ELSS
