@@ -1,36 +1,64 @@
-# 💎 FinAgent — AI-Powered Personal Finance Assistant
+# 💎 FinAgent — Multi-Agent Personal Finance Assistant
 
-> Combining **ML-based categorization & anomaly detection**, **RAG-grounded Q&A**, and an **autonomous multi-step agent** for proactive, personalized financial guidance.
+> A decentralized, multi-agent personal finance assistant combining **LangGraph orchestration**, **ML-based categorization & anomaly detection**, **Corrective RAG (CRAG)**, and local **Ollama inference** to deliver proactive, personalized financial guidance.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue) 
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green)
+![Express](https://img.shields.io/badge/Express-4.18-lightgrey)
 ![React](https://img.shields.io/badge/React-19-blue)
+![LangGraph](https://img.shields.io/badge/LangGraph-0.1-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Tech Stack
 
 ```
-User → React Dashboard
-         │
-         ▼
-    FastAPI Backend
-         │
-    ├── Auth (JWT + bcrypt)
-    ├── AI Agent (plan → act → observe → respond)
-    │    ├── ML Engine (sklearn)
-    │    │    ├── RandomForest Categorizer + SHAP
-    │    │    ├── IsolationForest Anomaly Detector
-    │    │    ├── Linear Trend Forecaster
-    │    │    └── Subscription Detector
-    │    ├── RAG Engine (Chroma + Gemini)
-    │    │    ├── Self-correcting retrieval pipeline
-    │    │    └── Knowledge Base (Tax, Budgeting, Investing)
-    │    └── 6 Agent Tools
-    ├── APScheduler (weekly digest, bill reminders, anomaly scan)
-    └── PostgreSQL DB (AES-256 encrypted sensitive fields)
+User ──▶ React Dashboard (Port 8501)
+               │
+               ▼
+       Express.js Gateway (Port 5000)
+        ├── Issues & Validates JWTs
+        ├── Handles Registration & Login
+        └── Proxies requests with X-User-Id
+               │
+               ▼
+        FastAPI Backend (Port 8000)
+        └── LangGraph Orchestrator (StateGraph)
+             ├── 1. Monitor Agent (IsolationForest & subscription checks)
+             ├── 2. Explainer Agent (Local Ollama: llama3.1)
+             ├── 3. Recommender Agent (Goal/budget advice)
+             └── 4. RAG Subsystem (sentence-transformers + ChromaDB)
+                     └── PostgreSQL Database (alerts, recommendations, user_facts)
 ```
+
+### Tech Stack Details
+- **Orchestration**: **LangGraph** (`StateGraph`) — runs the Orchestrator, Monitor, Explainer, and Recommender nodes inside FastAPI.
+- **Agent Host**: **FastAPI** (Python) — runs the LangGraph application; exposes endpoints for transactions, analytics, and chat.
+- **Auth & Gateway**: **Express.js** (Node.js) — issues/validates JWTs, intercepts incoming requests, and routes them to FastAPI with the authenticated `X-User-Id` header. Also acts as a notification webhook receiver.
+- **LLM Inference**: **Ollama** (local `llama3.1:8b` or `mistral:7b`) — powers the Explainer and Recommender nodes (Monitor runs purely on local ML for speed and cost efficiency).
+- **Database**: **PostgreSQL** — handles shared persistence (users, transactions, goals, alerts, recommendations, and agent memory). Sensitive fields are encrypted at rest via AES-256-GCM.
+- **Embeddings & Vector Store**: `sentence-transformers` (`all-MiniLM-L6-v2`) + ChromaDB.
+
+---
+
+## 🤖 Multi-Agent Roster
+
+Unlike monolithic agent loops, FinAgent splits execution into narrow, testable roles within a LangGraph topology:
+
+1. **Monitor Agent**: 
+   - *Role*: Proactive background scanner. Runs on new transactions or every 6 hours via APScheduler.
+   - *Process*: Runs scikit-learn's `IsolationForest` anomaly detector and recurring charge intervals. Runs without LLM calls for speed and zero cost.
+   - *Escalation*: Writes an `AnomalyFlag` to the database. If severity is Medium or High, it triggers a conditional LangGraph edge to invoke the Explainer Agent.
+2. **Explainer Agent**:
+   - *Role*: Grounded anomaly descriptor.
+   - *Process*: Queries the RAG subsystem and compares the transaction against user history, then prompts Ollama to explain the flag in simple language (e.g. *"This ₹4,200 charge is 4x your Electronics average"*).
+3. **Recommender Agent**:
+   - *Role*: Goal-oriented advisor.
+   - *Process*: Reasons over current savings goals and budget status to generate advisory recommendations (e.g. *"Consider moving ₹500 to your Emergency Fund goal"*), writing them to the `recommendations` table.
+4. **RAG Subsystem (with Corrective RAG)**:
+   - *Role*: Shared retrieval capability.
+   - *Self-Correction*: Chunks are graded by cosine similarity. If the score falls below a `0.35` threshold, the RAG engine automatically reformulates the query once and retries search before falling back.
 
 ---
 
@@ -46,47 +74,55 @@ pip install -r requirements.txt
 
 ### 2. Configure Environment
 
+Copy `.env.example` to `.env` in both the project root and `gateway/` folders:
 ```bash
 cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY (or leave blank for offline mode)
-# Ensure you configure your PostgreSQL connection string in DATABASE_URL
+# Also:
+# Copy gateway/.env.example to gateway/.env if not handled automatically
 ```
+Ensure your `DATABASE_URL` is pointing to your PostgreSQL instance, e.g.:
+`DATABASE_URL=postgresql://postgres:postgres@localhost:5432/finagent`
 
-Make sure your PostgreSQL server is running and the database (default `finagent`) has been created.
+Make sure your local PostgreSQL database exists and is running.
 
-Get a free Gemini API key at: https://aistudio.google.com/app/apikey
+### 3. Ollama Local Setup
+Download and start Ollama locally, then pull the default model:
+```bash
+ollama pull llama3.1:8b
+```
+*(If Ollama is not running, the application falls back to your Gemini API key)*
 
-### 3. Run Everything
+### 4. Run Everything
 
+Start the unified launcher:
 ```bash
 python run.py
 ```
-
-This will:
-- Seed the database with a demo user + 12 months of synthetic transactions
-- Start FastAPI backend at **http://localhost:8000**
-- Start React frontend at **http://localhost:8501**
-
-### 4. Login
-
-Open **http://localhost:8501** and use the demo credentials:
-- **Email:** `demo@finagent.ai`
-- **Password:** `Demo@123`
-
-Or click **"Try Demo"** for instant access.
+This launcher will automatically:
+1. Seed the PostgreSQL database on first run.
+2. Run `npm install` inside the `gateway` folder and start the Express Gateway at **http://localhost:5000**.
+3. Start the FastAPI backend on **http://localhost:8000**.
+4. Start the React dashboard on **http://localhost:8501** (proxied to the Express Gateway).
 
 ---
 
 ## 🔑 Manual Setup (Step by Step)
 
+If you prefer starting services manually in separate terminals:
+
 ```bash
 # Terminal 1: Seed database
 python -m backend.data.seed_data
 
-# Terminal 1: Start backend
+# Terminal 1: Start FastAPI backend
 uvicorn backend.main:app --reload --port 8000
 
-# Terminal 2: Install and start frontend
+# Terminal 2: Start Express Gateway
+cd gateway
+npm install
+node server.js
+
+# Terminal 3: Start Frontend React Dev Server
 cd frontend
 npm install
 npm run dev
@@ -100,165 +136,37 @@ npm run dev
 finagent/
 ├── backend/
 │   ├── main.py                  # FastAPI app entry point
-│   ├── auth.py                  # JWT + bcrypt authentication
+│   ├── auth.py                  # Inbound X-User-Id validation
 │   ├── database.py              # SQLAlchemy + PostgreSQL
-│   ├── models.py                # ORM models (User, Transaction, Goal, Alert, Memory)
-│   ├── schemas.py               # Pydantic request/response schemas
-│   ├── encryption.py            # AES-256-GCM field encryption
-│   ├── ml/
-│   │   ├── categorizer.py       # RandomForest + TF-IDF, SHAP explanations
-│   │   ├── anomaly_detector.py  # IsolationForest with rule-based explanations
-│   │   ├── forecaster.py        # Rolling mean + linear trend forecasting
-│   │   └── subscription_detector.py  # Recurring charge detection
-│   ├── rag/
-│   │   ├── embedder.py          # sentence-transformers + Chroma
-│   │   ├── knowledge_loader.py  # Chunk & embed knowledge base docs
-│   │   └── engine.py            # Self-correcting RAG pipeline
+│   ├── models.py                # ORM models (User, Transaction, Goal, Alert, Recommendation)
 │   ├── agent/
-│   │   ├── tools.py             # 6 agent tools (get_transactions, anomalies, etc.)
-│   │   ├── memory.py            # Session + cross-session memory
-│   │   └── planner.py           # Autonomous plan→act→observe→respond loop
-│   ├── routers/
-│   │   ├── transactions.py      # CRUD + CSV upload
-│   │   ├── analytics.py         # ML insights endpoints
-│   │   ├── chat.py              # Agent chat endpoint
-│   │   └── goals.py             # Savings goals CRUD
-│   ├── scheduler/
-│   │   └── jobs.py              # APScheduler: digest, reminders, scan
-│   └── data/
-│       ├── synthetic_generator.py   # Realistic Indian transaction generator
-│       ├── seed_data.py             # DB seeder
-│       └── knowledge_base/          # Tax rules, budgeting, investing docs
+│   │   ├── planner_langgraph.py # LangGraph Multi-Agent Orchestrator
+│   │   ├── tools.py             # Transactions, forecasts, and calculations tools
+│   │   └── memory.py            # Session + persistent cross-session facts
+│   ├── rag/
+│   │   ├── engine.py            # Self-correcting RAG pipeline + Ollama REST
+│   │   └── embedder.py          # sentence-transformers + Chroma
+│   └── routers/
+│       ├── chat.py              # Chat routes routed through LangGraph
+│       └── recommendations.py   # Recommendations CRUD endpoints
+├── gateway/
+│   ├── server.js                # Express.js server (JWT issuing, proxies, notification hook)
+│   └── package.json             # Express dependencies
 ├── frontend/
-│   ├── src/                     # React pages, components, and API adapter
-│   ├── package.json             # Frontend scripts and dependencies
-│   └── vite.config.ts           # Dev server and FastAPI proxy
+│   ├── src/                     # React dashboard pages and components
+│   └── vite.config.ts           # Configured to proxy /api to Express Gateway (Port 5000)
 ├── requirements.txt
-├── .env.example
-├── run.py                       # Unified launcher
+├── run.py                       # Unified multithreaded launcher
 └── README.md
 ```
 
 ---
 
-## 🔒 Security Features
+## 🔒 Security & Least Privilege
 
-| Feature | Implementation |
-|---|---|
-| Passwords | bcrypt with cost=12 |
-| Authentication | JWT (HS256, 24-hour expiry) |
-| Sensitive fields | AES-256-GCM encryption at rest |
-| Data isolation | Row-level user_id filtering on ALL queries |
-| Agent permissions | Read-only (cannot move money or modify critical settings) |
-| SQL injection | SQLAlchemy ORM with parameterized queries |
-| Transport | CORS-configured for frontend origin only |
-
----
-
-## 🤖 ML/AI Components
-
-### 1. Transaction Categorizer
-- **Model:** RandomForestClassifier (200 trees)
-- **Features:** TF-IDF on merchant name (bigrams) + amount + income flag
-- **Categories:** 11 categories (Food, Transport, Shopping, Utilities, Healthcare, Entertainment, Income, Investments, Education, Travel, Other)
-- **Fallback:** Keyword matching when confidence < 45%
-- **Explainability:** Confidence score + matched keywords
-
-### 2. Anomaly Detector  
-- **Model:** IsolationForest (200 estimators, 5% contamination)
-- **Features:** Amount, log-amount, day of week, hour, is_weekend
-- **Explanation:** Rule-based SHAP-style — compares against per-category historical statistics
-- **Severity:** Low (< 0.50) / Medium (0.50–0.75) / High (> 0.75)
-
-### 3. Spending Forecaster
-- **Method:** Rolling 30-day mean + linear OLS trend extrapolation
-- **Horizons:** 7, 14, 30, 60, 90 days
-- **Blend:** 70% trend-based + 30% rolling average
-- **Per-category:** Separate forecast for each spending category
-
-### 4. Subscription Detector
-- **Method:** Amount tolerance grouping (±10%) + interval regularity (±4 days)
-- **Intervals:** Weekly, biweekly, monthly detection
-- **Output:** Monthly cost, creep score, next charge prediction
-
-### 5. RAG Engine
-- **Embeddings:** `all-MiniLM-L6-v2` (sentence-transformers)
-- **Vector DB:** ChromaDB (persistent)
-- **Self-correction:** Cosine similarity grading (threshold: 0.35)
-- **Knowledge base:** Indian tax rules, 50/30/20 budgeting, investing, emergency fund
-
-### 6. Autonomous Agent
-- **Architecture:** Custom plan → act → observe → respond loop
-- **Tools:** get_transactions, get_anomalies, forecast_spending, check_goal, calculate, search_knowledge
-- **Memory:** Session (last 10 turns) + cross-session persistent facts
-- **LLM:** Gemini 1.5 Flash (or Anthropic Claude, configurable via .env)
-
----
-
-## 📊 API Endpoints
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/auth/register` | POST | Register user |
-| `/auth/login` | POST | Login, get JWT |
-| `/auth/me` | GET | Current user profile |
-| `/transactions` | GET/POST | List/create transactions |
-| `/transactions/upload-csv` | POST | Upload CSV with auto-categorization |
-| `/analytics/summary` | GET | Spending summary by category |
-| `/analytics/forecast` | GET | 30/60/90-day spending forecast |
-| `/analytics/anomalies` | GET | Flagged anomalous transactions |
-| `/analytics/subscriptions` | GET | Detected subscriptions + creep score |
-| `/analytics/what-if` | GET | What-if spending simulator |
-| `/analytics/train-models` | POST | Train ML models on user data |
-| `/chat` | POST | Agent chat endpoint |
-| `/chat/digest` | GET | Weekly financial digest |
-| `/goals` | GET/POST | List/create savings goals |
-| `/goals/{id}/contribute` | POST | Add contribution to goal |
-
-Full interactive docs: **http://localhost:8000/docs**
-
----
-
-## 🛠️ Configuration
-
-| Variable | Description | Default |
-|---|---|---|
-| `SECRET_KEY` | AES-256 encryption key (32 chars) | (required) |
-| `JWT_SECRET` | JWT signing key | (required) |
-| `LLM_PROVIDER` | `gemini` / `anthropic` / `offline` | `gemini` |
-| `GEMINI_API_KEY` | Google AI Studio API key | (required for AI) |
-| `ANTHROPIC_API_KEY` | Anthropic API key | (optional) |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/finagent` |
-| `CHROMA_PERSIST_DIR` | Chroma vector DB directory | `./chroma_db` |
-
----
-
-## 🧪 Testing
-
-```bash
-# Verify database seeding
-python -m backend.data.seed_data
-
-# Test ML components
-python -c "from backend.ml.categorizer import get_categorizer; c = get_categorizer(); print(c.predict('Zomato', -350))"
-
-# Test synthetic data generation
-python -m backend.data.synthetic_generator
-
-# API health check
-curl http://localhost:8000/health
-```
-
----
-
-## 📈 What Makes FinAgent Unique
-
-Unlike projects that bolt ML, RAG, and agents together as separate demos, FinAgent uses them as **one interdependent pipeline**:
-
-1. **ML output shapes RAG retrieval** — anomaly score and category influence what context the RAG fetches
-2. **RAG output feeds agent calculations** — retrieved tax rules + spending data enable grounded recommendations
-3. **Agent runs proactively** — not just when prompted, but via scheduled jobs every 6 hours
-4. **Memory is persistent** — the agent remembers your income, goals, and past conversations
+- **Gateway Isolation**: Direct authentication is decoupled from the agent host; Express gateway issues JWTs and verifies all API scopes before forwarding user information to FastAPI.
+- **Read-Only Agent Permissions**: Agents have no access to write to account balances or trigger money-moving endpoints.
+- **AES-256 Encryption**: Sensitive transaction details are encrypted at rest in PostgreSQL. Semantically anonymized chunks are stored in ChromaDB to prevent vector store leaks.
 
 ---
 

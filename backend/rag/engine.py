@@ -8,13 +8,33 @@ from backend.rag.embedder import get_embedding_engine
 
 load_dotenv()
 
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini").lower()
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 
 RELEVANCE_THRESHOLD = 0.35  # Minimum cosine similarity to use retrieved context
+
+
+def _call_ollama(prompt: str, system: str = "") -> str:
+    """Call Ollama local LLM via REST API."""
+    try:
+        url = f"{OLLAMA_API_URL}/api/generate"
+        payload = {
+            "model": OLLAMA_MODEL,
+            "prompt": prompt,
+            "system": system,
+            "stream": False,
+            "options": {"temperature": 0.7}
+        }
+        resp = http_requests.post(url, json=payload, timeout=60)
+        resp.raise_for_status()
+        return resp.json()["response"].strip()
+    except Exception as e:
+        return f"[Ollama Error] {str(e)}"
 
 
 def _call_llm(prompt: str, system: str = "") -> str:
@@ -22,11 +42,17 @@ def _call_llm(prompt: str, system: str = "") -> str:
     Call the configured LLM with a prompt.
     Returns the text response.
     """
+    if LLM_PROVIDER == "ollama":
+        res = _call_ollama(prompt, system)
+        if not res.startswith("[Ollama Error]"):
+            return res
     if LLM_PROVIDER == "gemini" and GEMINI_API_KEY:
         return _call_gemini(prompt, system)
     elif LLM_PROVIDER == "anthropic" and ANTHROPIC_API_KEY:
         return _call_anthropic(prompt, system)
     else:
+        if GEMINI_API_KEY:
+            return _call_gemini(prompt, system)
         return _offline_response(prompt)
 
 
@@ -113,7 +139,7 @@ class RAGEngine:
         n_retrieve: int = 4,
     ) -> Dict:
         """
-        Answer a financial question using RAG.
+        Answer a financial question using RAG with query reformulation retry.
 
         Args:
             question: User's question
@@ -129,6 +155,20 @@ class RAGEngine:
         # Step 2: Grade relevance
         relevant_chunks = [(text, source, score) for text, source, score in retrieved
                            if score >= RELEVANCE_THRESHOLD]
+
+        # Step 3: Self-correction (CRAG query reformulation retry)
+        if len(relevant_chunks) == 0:
+            rewrite_prompt = (
+                f"Rewrite the following user query to be optimized for database vector search. "
+                f"Output only the rewritten query text, nothing else.\n\n"
+                f"Original Query: {question}"
+            )
+            rewritten_query = _call_llm(rewrite_prompt, "You are a query optimizer.")
+            if rewritten_query and not rewritten_query.startswith("["):
+                retrieved = retrieve(rewritten_query, n_results=n_retrieve)
+                relevant_chunks = [(text, source, score) for text, source, score in retrieved
+                                   if score >= RELEVANCE_THRESHOLD]
+
         used_rag = len(relevant_chunks) > 0
         avg_relevance = sum(s for _, _, s in relevant_chunks) / len(relevant_chunks) if relevant_chunks else 0
 

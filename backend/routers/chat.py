@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.auth import get_current_user
 from backend import models, schemas
-from backend.agent.planner import AgentPlanner
+from backend.agent.planner_langgraph import LangGraphPlanner as AgentPlanner
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 

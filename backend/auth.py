@@ -8,7 +8,7 @@ from typing import Optional
 
 import bcrypt
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
@@ -70,12 +70,34 @@ def decode_token(token: str) -> dict:
 # ─── FastAPI Dependencies ─────────────────────────────────────────────────────
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     db: Session = Depends(get_db),
 ) -> models.User:
-    """FastAPI dependency: verify JWT and return the current User model."""
-    payload = decode_token(credentials.credentials)
-    user_id = int(payload["sub"])
+    """
+    FastAPI dependency: verify user via X-User-Id header (passed by Express gateway)
+    or fall back to verifying the Bearer token directly.
+    """
+    x_user_id = request.headers.get("x-user-id")
+    if x_user_id:
+        try:
+            user_id = int(x_user_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid X-User-Id header format.",
+            )
+    else:
+        # Fallback to direct JWT token check
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Missing or invalid authentication credentials.",
+            )
+        token = auth_header.split(" ")[1]
+        payload = decode_token(token)
+        user_id = int(payload["sub"])
+
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user or not user.is_active:
         raise HTTPException(

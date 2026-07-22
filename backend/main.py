@@ -11,7 +11,27 @@ from dotenv import load_dotenv
 from backend.database import get_db, init_db
 from backend.auth import register_user, login_user, get_current_user
 from backend import schemas, models
-from backend.routers import transactions, analytics, chat, goals, alerts, profile
+from backend.routers import transactions, analytics, chat, goals, alerts, profile, recommendations
+from backend.rag.knowledge_loader import load_knowledge_base
+
+load_dotenv()
+
+app = FastAPI(
+    title="FinAgent API",
+"""
+FinAgent — FastAPI Application Entry Point
+Wires up all routers, CORS, startup events, and auth endpoints.
+"""
+import os
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+
+from backend.database import get_db, init_db
+from backend.auth import register_user, login_user, get_current_user
+from backend import schemas, models
+from backend.routers import transactions, analytics, chat, goals, alerts, profile, recommendations
 from backend.rag.knowledge_loader import load_knowledge_base
 
 load_dotenv()
@@ -40,6 +60,7 @@ app.include_router(chat.router)
 app.include_router(goals.router)
 app.include_router(alerts.router)
 app.include_router(profile.router)
+app.include_router(recommendations.router)
 
 
 # ─── Auth Endpoints ───────────────────────────────────────────────────────────
