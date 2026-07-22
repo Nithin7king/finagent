@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue) 
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.35-red)
+![React](https://img.shields.io/badge/React-19-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
@@ -12,7 +12,7 @@
 ## 🏗️ Architecture
 
 ```
-User → Streamlit Dashboard
+User → React Dashboard
          │
          ▼
     FastAPI Backend
@@ -29,7 +29,7 @@ User → Streamlit Dashboard
     │    │    └── Knowledge Base (Tax, Budgeting, Investing)
     │    └── 6 Agent Tools
     ├── APScheduler (weekly digest, bill reminders, anomaly scan)
-    └── SQLite DB (AES-256 encrypted sensitive fields)
+    └── PostgreSQL DB (AES-256 encrypted sensitive fields)
 ```
 
 ---
@@ -49,7 +49,10 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 # Edit .env and add your GEMINI_API_KEY (or leave blank for offline mode)
+# Ensure you configure your PostgreSQL connection string in DATABASE_URL
 ```
+
+Make sure your PostgreSQL server is running and the database (default `finagent`) has been created.
 
 Get a free Gemini API key at: https://aistudio.google.com/app/apikey
 
@@ -62,7 +65,7 @@ python run.py
 This will:
 - Seed the database with a demo user + 12 months of synthetic transactions
 - Start FastAPI backend at **http://localhost:8000**
-- Start Streamlit frontend at **http://localhost:8501**
+- Start React frontend at **http://localhost:8501**
 
 ### 4. Login
 
@@ -83,8 +86,10 @@ python -m backend.data.seed_data
 # Terminal 1: Start backend
 uvicorn backend.main:app --reload --port 8000
 
-# Terminal 2: Start frontend
-streamlit run frontend/app.py --server.port 8501
+# Terminal 2: Install and start frontend
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
@@ -96,7 +101,7 @@ finagent/
 ├── backend/
 │   ├── main.py                  # FastAPI app entry point
 │   ├── auth.py                  # JWT + bcrypt authentication
-│   ├── database.py              # SQLAlchemy + SQLite
+│   ├── database.py              # SQLAlchemy + PostgreSQL
 │   ├── models.py                # ORM models (User, Transaction, Goal, Alert, Memory)
 │   ├── schemas.py               # Pydantic request/response schemas
 │   ├── encryption.py            # AES-256-GCM field encryption
@@ -125,16 +130,9 @@ finagent/
 │       ├── seed_data.py             # DB seeder
 │       └── knowledge_base/          # Tax rules, budgeting, investing docs
 ├── frontend/
-│   ├── app.py                   # Streamlit entry + auth + global CSS
-│   ├── pages/
-│   │   ├── 01_Dashboard.py      # KPIs, spending overview, forecast
-│   │   ├── 02_Transactions.py   # Table, CSV upload, category correction
-│   │   ├── 03_Analytics.py      # Anomalies, subscriptions, what-if
-│   │   ├── 04_Chat.py           # AI agent chat interface
-│   │   └── 05_Goals.py          # Savings goals tracker
-│   └── components/
-│       ├── charts.py            # Plotly chart helpers
-│       └── api_client.py        # FastAPI HTTP client
+│   ├── src/                     # React pages, components, and API adapter
+│   ├── package.json             # Frontend scripts and dependencies
+│   └── vite.config.ts           # Dev server and FastAPI proxy
 ├── requirements.txt
 ├── .env.example
 ├── run.py                       # Unified launcher
@@ -230,7 +228,7 @@ Full interactive docs: **http://localhost:8000/docs**
 | `LLM_PROVIDER` | `gemini` / `anthropic` / `offline` | `gemini` |
 | `GEMINI_API_KEY` | Google AI Studio API key | (required for AI) |
 | `ANTHROPIC_API_KEY` | Anthropic API key | (optional) |
-| `DATABASE_URL` | SQLite/PostgreSQL connection string | `sqlite:///./finagent.db` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/finagent` |
 | `CHROMA_PERSIST_DIR` | Chroma vector DB directory | `./chroma_db` |
 
 ---
