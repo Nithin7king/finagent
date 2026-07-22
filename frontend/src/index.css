@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@100..900&display=swap');
+@import "tailwindcss";
+
+:root, .dark {
+  --bg-primary: #0B1220;
+  --bg-secondary: #121B2E;
+  --bg-paper: #F4F0E6;
+  --accent-gold: #C9A24B;
+  --accent-sage: #5FAE7C;
+  --accent-coral: #E15B4F;
+  --text-paper: #101826;
+  --text-secondary: #8A93A6;
+  --text-primary: #FFFFFF;
+}
+
+.light {
+  --bg-primary: #FAF8F2;       /* Warm parchment canvas */
+  --bg-secondary: #FFFFFF;     /* Elevated pure white card layers */
+  --bg-paper: #EFE9D3;         /* Slightly deeper paper stock */
+  --accent-gold: #AC7A1A;      /* Rich polished gold for light-mode text readability */
+  --accent-sage: #2C7849;      /* Forest sage green for high-contrast credits/deposits */
+  --accent-coral: #CD3527;     /* Vibrant dark coral for clear debits/anomalies */
+  --text-paper: #101826;       /* Crisp ink ink-text on papers */
+  --text-secondary: #53627A;   /* Sleek slate grey for high-contrast labels */
+  --text-primary: #121B2E;     /* Midnight navy-charcoal for crisp reading */
+}
+
+@theme {
+  --color-ink: var(--bg-primary);
+  --color-ink-raised: var(--bg-secondary);
+  --color-paper: var(--bg-paper);
+  --color-gold: var(--accent-gold);
+  --color-sage: var(--accent-sage);
+  --color-coral: var(--accent-coral);
+  --color-ink-text: var(--text-paper);
+  --color-mist: var(--text-secondary);
+  --color-white: var(--text-primary);
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-ink text-white font-sans antialiased transition-colors duration-300;
+  }
+  
+  /* Focus rings styled in gold */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-gold/70 ring-offset-2 ring-offset-ink transition-all;
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* Ledger embossed gold stamp style */
+  .gold-stamp {
+    @apply rounded-sm border border-gold/40 text-gold bg-transparent font-mono font-medium uppercase text-[10px] tracking-widest px-2 py-0.5 select-none inline-flex items-center justify-center;
+  }
+  
+  /* Ledger embossed coral stamp style for anomalies */
+  .coral-stamp {
+    @apply rounded-sm border border-coral/50 text-coral bg-transparent font-mono font-medium uppercase text-[10px] tracking-widest px-2 py-0.5 select-none inline-flex items-center justify-center relative overflow-hidden;
+    background-image: radial-gradient(circle, rgba(225, 91, 79, 0.05) 0%, transparent 70%);
+  }
+}
+
+/* Custom fade animation for page navigation */
+.page-fade-enter {
+  opacity: 0;
+  transform: translateY(2px);
+}
+.page-fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(172, 122, 26, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(172, 122, 26, 0.4);
+}

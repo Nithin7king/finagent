@@ -1,6 +1,6 @@
 """
 FinAgent — Database setup
-SQLAlchemy + SQLite with async support
+SQLAlchemy + PostgreSQL
 """
 import os
 from sqlalchemy import create_engine
@@ -10,12 +10,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./finagent.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/finagent")
 
-# SQLite-specific: check_same_thread=False required for FastAPI
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
     echo=False,
 )
 

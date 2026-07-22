@@ -1,6 +1,6 @@
 """
 FinAgent — Agent Memory
-Session + cross-session memory stored in SQLite.
+Session + cross-session memory stored in PostgreSQL.
 Maintains last 10 turns per session + a persistent financial profile.
 """
 from typing import List, Dict, Optional

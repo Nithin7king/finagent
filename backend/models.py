@@ -43,6 +43,7 @@ class User(Base):
     goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
     alerts = relationship("Alert", back_populates="user", cascade="all, delete-orphan")
     memories = relationship("AgentMemory", back_populates="user", cascade="all, delete-orphan")
+    recommendations = relationship("Recommendation", back_populates="user", cascade="all, delete-orphan")
 
 
 class Transaction(Base):
@@ -126,3 +127,19 @@ class AgentMemory(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="memories")
+
+
+class Recommendation(Base):
+    __tablename__ = "recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    alert_id = Column(Integer, ForeignKey("alerts.id"), nullable=True)
+
+    title = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    priority = Column(String, default="medium")           # low | medium | high
+    is_actioned = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="recommendations")
