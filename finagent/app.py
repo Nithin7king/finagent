@@ -11,7 +11,7 @@ import plotly.express as px
 from data_gen import generate_transactions, inject_anomalies, generate_live_batch
 from agent import FinAgent
 
-st.set_page_config(page_title="FinAgent", page_icon="💰", layout="wide")
+st.set_page_config(page_title="MYFY.AI", page_icon="💰", layout="wide")
 
 
 # ---------------------------------------------------------------------------
@@ -35,7 +35,7 @@ if "alerts" not in st.session_state:
 # ---------------------------------------------------------------------------
 # Sidebar
 # ---------------------------------------------------------------------------
-st.sidebar.title("💰 FinAgent")
+st.sidebar.title("💰 MYFY.AI")
 st.sidebar.caption("AI-powered personal finance assistant — ML + RAG + Agents")
 
 if st.sidebar.button("🔄 Simulate new live transactions"):

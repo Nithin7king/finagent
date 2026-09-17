@@ -129,6 +129,12 @@ app.post('/api/auth/login', async (req, res) => {
 
 // ─── Reverse Proxy Gateway ────────────────────────────────────────────────────
 app.use('/api', (req, res, next) => {
+  // Allow preflight CORS requests and public endpoints through without mandatory token
+  const publicPaths = ['/auth/login', '/auth/register', '/health', '/docs', '/openapi.json'];
+  if (req.method === 'OPTIONS' || publicPaths.includes(req.path)) {
+    return next();
+  }
+
   // Validate Authorization header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -145,8 +151,10 @@ app.use('/api', (req, res, next) => {
   }
 }, proxy(FASTAPI_URL, {
   proxyReqOptDecorator: function(proxyReqOpts, srcReq) {
-    // Inject X-User-Id header to backend request
-    proxyReqOpts.headers['x-user-id'] = srcReq.userId;
+    // Inject X-User-Id header to backend request if available
+    if (srcReq.userId) {
+      proxyReqOpts.headers['x-user-id'] = srcReq.userId;
+    }
     return proxyReqOpts;
   },
   proxyReqPathResolver: function(req) {

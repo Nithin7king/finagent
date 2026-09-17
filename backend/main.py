@@ -10,14 +10,6 @@ from dotenv import load_dotenv
 
 from backend.database import get_db, init_db
 from backend.auth import register_user, login_user, get_current_user
-from backend import schemas, models
-from backend.routers import transactions, analytics, chat, goals, alerts, profile, recommendations
-from backend.rag.knowledge_loader import load_knowledge_base
-
-load_dotenv()
-
-app = FastAPI(
-    title="FinAgent API",
 """
 FinAgent — FastAPI Application Entry Point
 Wires up all routers, CORS, startup events, and auth endpoints.
@@ -37,7 +29,8 @@ from backend.rag.knowledge_loader import load_knowledge_base
 load_dotenv()
 
 app = FastAPI(
-    title="FinAgent API",
+    title="MYFY.AI API",
+
     description="AI-Powered Personal Finance Assistant — ML, RAG, and Autonomous Agents",
     version="1.0.0",
     docs_url="/docs",

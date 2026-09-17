@@ -282,7 +282,7 @@ function createDefaultUserDb(name: string, email: string): DB {
       {
         id: "msg-1",
         sender: "agent",
-        text: `Namaste ${firstName}! I am your FinAgent assistant. I have reviewed your Indian banking passbook and identified ₹2,16,133 in current active capital, with 3 high-impact anomalies flagged in the current billing cycle. How may I help you optimize your tax savings, investments, or budget today?`,
+        text: `Namaste ${firstName}! I am your MYFY.AI assistant. I have reviewed your Indian banking passbook and identified ₹2,16,133 in current active capital, with 3 high-impact anomalies flagged in the current billing cycle. How may I help you optimize your tax savings, investments, or budget today?`,
         timestamp: new Date().toISOString(),
       },
     ],
@@ -808,7 +808,7 @@ app.post("/api/chat", async (req, res) => {
   `;
   
   const systemInstruction = `
-  You are FinAgent, an elite, highly professional AI personal finance assistant for an Indian user.
+  You are MYFY.AI, an elite, highly professional AI personal finance assistant for an Indian user.
   You are grounded in a real banking passbook. You communicate with absolute authority, tabular precision, and subtle warmth.
   Speak using formal Indian banking terms (e.g. SIP, passbook, credit ledger, ledger entries, ₹ currency).
   Be incredibly crisp, structured, and factual. Always use Markdown lists or tables when explaining numbers.
@@ -838,8 +838,35 @@ app.post("/api/chat", async (req, res) => {
   
   try {
     let responseText = "";
+    const provider = process.env.LLM_PROVIDER?.toLowerCase() || "ollama";
+    const ollamaUrl = (process.env.OLLAMA_API_URL || "http://localhost:11434").replace(/\/$/, "");
+    const ollamaModel = process.env.OLLAMA_MODEL || "llama3.1:8b";
+
+    if (provider === "ollama") {
+      try {
+        const ollamaRes = await fetch(`${ollamaUrl}/api/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: ollamaModel,
+            prompt: message,
+            system: systemInstruction,
+            stream: false,
+            options: { temperature: 0.3 }
+          })
+        });
+        if (ollamaRes.ok) {
+          const data: any = await ollamaRes.json();
+          if (data && data.response) {
+            responseText = data.response.trim();
+          }
+        }
+      } catch (err) {
+        console.warn("[Ollama] Local server call failed, evaluating fallbacks:", err);
+      }
+    }
     
-    if (ai) {
+    if (!responseText && ai) {
       // Call real Gemini
       const geminiResponse = await ai.models.generateContent({
         model: "gemini-3.5-flash",
@@ -850,7 +877,7 @@ app.post("/api/chat", async (req, res) => {
         }
       });
       responseText = geminiResponse.text || "I was unable to analyze that. Please check back shortly.";
-    } else {
+    } else if (!responseText) {
       // Offline high-fidelity fallback
       const query = message.toLowerCase();
       if (query.includes("tax") || query.includes("80c")) {

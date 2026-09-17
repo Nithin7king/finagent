@@ -56,7 +56,7 @@ export const Navbar: React.FC = () => {
             </div>
             <div>
               <span className="text-xl font-display font-medium tracking-tight text-white italic">
-                FinAgent
+                MYFY.AI
               </span>
               <span className="hidden sm:inline-block text-[9px] font-mono text-gold/60 uppercase tracking-widest block ml-2">
                 Passbook

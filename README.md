@@ -85,12 +85,22 @@ Ensure your `DATABASE_URL` is pointing to your PostgreSQL instance, e.g.:
 
 Make sure your local PostgreSQL database exists and is running.
 
-### 3. Ollama Local Setup
-Download and start Ollama locally, then pull the default model:
+### 3. Open-Source Local Setup (Ollama)
+FinAgent runs 100% open source out of the box using **Ollama** for local inference without sending data to cloud APIs:
 ```bash
+# 1. Download Ollama from https://ollama.com
+# 2. Start local daemon
+ollama serve
+
+# 3. Pull preferred open-source model (llama3.1:8b, qwen2.5:7b, mistral, llama3.2, etc.)
 ollama pull llama3.1:8b
 ```
-*(If Ollama is not running, the application falls back to your Gemini API key)*
+Ensure `.env` contains:
+```env
+LLM_PROVIDER=ollama
+OLLAMA_API_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
+```
 
 ### 4. Run Everything
 

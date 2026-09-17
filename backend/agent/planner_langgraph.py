@@ -324,7 +324,7 @@ def synthesizer_node(state: FinAgentState) -> Dict[str, Any]:
                 f"{express_gateway_url}/notifications/deliver",
                 json={
                     "user_id": state["user_id"],
-                    "title": "🎯 FinAgent Digest & Alerts",
+                    "title": "🎯 MYFY.AI Digest & Alerts",
                     "message": payload_content[:300] + "...",
                     "content": payload_content
                 },
@@ -340,7 +340,7 @@ def synthesizer_node(state: FinAgentState) -> Dict[str, Any]:
     history_str = "\n".join([f"{m['role'].capitalize()}: {m['content']}" for m in history[-4:]])
     facts_str = "\n".join(user_facts)
     
-    prompt = f"""You are FinAgent, a personal finance assistant. Synthesize the findings into a direct chat response.
+    prompt = f"""You are MYFY.AI, a personal finance assistant. Synthesize the findings into a direct chat response.
 
 User message: "{user_message}"
 
@@ -362,7 +362,7 @@ Instructions:
 - If recommendations or explanations exist, weave them in naturally.
 - Keep the response short (under 250 words) and use ₹."""
 
-    response = _call_llm(prompt, "You are FinAgent, a helpful personal finance chatbot.")
+    response = _call_llm(prompt, "You are MYFY.AI, a helpful personal finance chatbot.")
     return {"final_response": response}
 
 

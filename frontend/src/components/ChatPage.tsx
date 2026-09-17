@@ -92,7 +92,7 @@ export const ChatPage: React.FC = () => {
                 <Sparkles className="w-4 h-4 text-gold animate-spin" />
               </div>
               <div className="p-4 bg-ink border border-gold/5 rounded-sm flex items-center space-x-2">
-                <span className="text-xs font-mono text-gold/80 italic">FinAgent is auditing ledger parameters</span>
+                <span className="text-xs font-mono text-gold/80 italic">MYFY.AI is auditing ledger parameters</span>
                 <div className="flex items-center space-x-1 pl-1">
                   <span className="w-1.5 h-1.5 bg-gold rounded-full animate-[bounce_1s_infinite_100ms]" />
                   <span className="w-1.5 h-1.5 bg-gold rounded-full animate-[bounce_1s_infinite_200ms]" />

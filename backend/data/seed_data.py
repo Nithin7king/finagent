@@ -109,7 +109,7 @@ def seed(db: Session):
             anomaly_label=severity in ("medium", "high"),
             anomaly_explanation=explanation if severity in ("medium", "high") else None,
             is_subscription=bool(row.get("is_subscription", False)),
-            subscription_interval_days=row.get("subscription_interval_days"),
+            subscription_interval_days=int(row["subscription_interval_days"]) if pd.notna(row.get("subscription_interval_days")) else None,
             source="synthetic",
         )
         batch.append(t)

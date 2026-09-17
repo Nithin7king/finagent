@@ -21,10 +21,12 @@ RELEVANCE_THRESHOLD = 0.35  # Minimum cosine similarity to use retrieved context
 
 def _call_ollama(prompt: str, system: str = "") -> str:
     """Call Ollama local LLM via REST API."""
+    api_url = os.getenv("OLLAMA_API_URL", "http://localhost:11434").rstrip("/")
+    model = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
     try:
-        url = f"{OLLAMA_API_URL}/api/generate"
+        url = f"{api_url}/api/generate"
         payload = {
-            "model": OLLAMA_MODEL,
+            "model": model,
             "prompt": prompt,
             "system": system,
             "stream": False,
@@ -34,7 +36,10 @@ def _call_ollama(prompt: str, system: str = "") -> str:
         resp.raise_for_status()
         return resp.json()["response"].strip()
     except Exception as e:
-        return f"[Ollama Error] {str(e)}"
+        return (
+            f"[Ollama Error] Unable to connect to local Ollama at {api_url} with model '{model}'. "
+            f"Please ensure Ollama is running (`ollama serve`) and model is pulled (`ollama pull {model}`). Details: {str(e)}"
+        )
 
 
 def _call_llm(prompt: str, system: str = "") -> str:
@@ -42,25 +47,42 @@ def _call_llm(prompt: str, system: str = "") -> str:
     Call the configured LLM with a prompt.
     Returns the text response.
     """
-    if LLM_PROVIDER == "ollama":
+    provider = os.getenv("LLM_PROVIDER", "ollama").lower()
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
+
+    if provider == "ollama":
+        res = _call_ollama(prompt, system)
+        if res.startswith("[Ollama Error]") and not gemini_key and not anthropic_key:
+            return res
+        elif not res.startswith("[Ollama Error]"):
+            return res
+
+    if provider == "gemini" and gemini_key:
+        return _call_gemini(prompt, system)
+    elif provider == "anthropic" and anthropic_key:
+        return _call_anthropic(prompt, system)
+    elif provider == "offline":
+        return _offline_response(prompt)
+    else:
+        # Fallback evaluation
         res = _call_ollama(prompt, system)
         if not res.startswith("[Ollama Error]"):
             return res
-    if LLM_PROVIDER == "gemini" and GEMINI_API_KEY:
-        return _call_gemini(prompt, system)
-    elif LLM_PROVIDER == "anthropic" and ANTHROPIC_API_KEY:
-        return _call_anthropic(prompt, system)
-    else:
-        if GEMINI_API_KEY:
+        if gemini_key:
             return _call_gemini(prompt, system)
+        if anthropic_key:
+            return _call_anthropic(prompt, system)
         return _offline_response(prompt)
 
 
 def _call_gemini(prompt: str, system: str = "") -> str:
     """Call Gemini via REST API (Python 3.8 compatible)."""
     try:
+        model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        api_key = os.getenv("GEMINI_API_KEY", "")
         full_prompt = f"{system}\n\n{prompt}" if system else prompt
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         payload = {
             "contents": [{"parts": [{"text": full_prompt}]}],
             "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024},
@@ -76,14 +98,16 @@ def _call_gemini(prompt: str, system: str = "") -> str:
 def _call_anthropic(prompt: str, system: str = "") -> str:
     """Call Anthropic Claude via REST API (Python 3.8 compatible)."""
     try:
+        model = os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+        api_key = os.getenv("ANTHROPIC_API_KEY", "")
         url = "https://api.anthropic.com/v1/messages"
         headers = {
-            "x-api-key": ANTHROPIC_API_KEY,
+            "x-api-key": api_key,
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         }
         payload = {
-            "model": ANTHROPIC_MODEL,
+            "model": model,
             "max_tokens": 1024,
             "system": system or "You are FinAgent, a helpful personal finance assistant.",
             "messages": [{"role": "user", "content": prompt}],
@@ -98,7 +122,7 @@ def _call_anthropic(prompt: str, system: str = "") -> str:
 def _offline_response(prompt: str) -> str:
     """
     Offline fallback: rule-based response for common finance queries.
-    Used when no LLM API is configured.
+    Used when no LLM API or Ollama model is available.
     """
     prompt_lower = prompt.lower()
     if "emergency fund" in prompt_lower:
@@ -112,8 +136,8 @@ def _offline_response(prompt: str) -> str:
     else:
         return (
             "I can help you with questions about your spending, savings goals, anomalies, "
-            "tax rules, and budgeting strategies. Please configure a Gemini or Anthropic API key "
-            "in your .env file for full AI-powered responses."
+            "tax rules, and budgeting strategies. Please start local Ollama ('ollama serve') "
+            "or configure an API key in your .env file for full AI-powered responses."
         )
 
 

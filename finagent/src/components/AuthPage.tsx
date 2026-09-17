@@ -40,7 +40,7 @@ export const AuthPage: React.FC = () => {
   const handleDemoMode = async () => {
     setErr(null);
     setIsSubmitting(true);
-    const success = await login('demo@finagent.ai', 'demo-password');
+    const success = await login('demo@finagent.ai', 'Demo@123');
     if (!success) setErr('Demo login failed. Please retry.');
     setIsSubmitting(false);
   };

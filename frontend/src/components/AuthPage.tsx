@@ -40,7 +40,7 @@ export const AuthPage: React.FC = () => {
   const handleDemoMode = async () => {
     setErr(null);
     setIsSubmitting(true);
-    const success = await login('demo@finagent.ai', 'demo-password');
+    const success = await login('demo@finagent.ai', 'Demo@123');
     if (!success) setErr('Demo login failed. Please retry.');
     setIsSubmitting(false);
   };
@@ -54,7 +54,7 @@ export const AuthPage: React.FC = () => {
           <Landmark className="w-6 h-6" />
         </div>
         <h1 className="text-3xl font-display font-medium tracking-tight text-white italic">
-          FinAgent
+          MYFY.AI
         </h1>
         <p className="text-xs font-mono text-gold/60 uppercase tracking-widest mt-1.5">
           AI Personal Finance Ledger
