@@ -8,16 +8,30 @@ class ApiService {
   static const String _tokenKey = 'finagent_jwt_token';
 
   // Configurable base URL:
-  // On Flutter web, default to http://localhost:5000/api
+  // Supports --dart-define=API_URL=... build flag
+  // On Flutter web/desktop, default to http://localhost:5000/api
   // On Android emulator, 10.0.2.2:5000
-  // On desktop/iOS simulator, localhost:5000
   static String get baseUrl {
+    const envUrl = String.fromEnvironment('API_URL');
+    if (envUrl.isNotEmpty) return envUrl;
+
     if (kIsWeb) {
       return 'http://localhost:5000/api';
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:5000/api';
     }
     return 'http://localhost:5000/api';
+  }
+
+  /// System health check endpoint
+  static Future<bool> checkHealth() async {
+    try {
+      final url = Uri.parse('$baseUrl/health');
+      final response = await http.get(url).timeout(const Duration(seconds: 4));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<String?> getToken() async {
@@ -267,5 +281,35 @@ class ApiService {
       return data['digest'] ?? 'Digest unavailable.';
     }
     return 'Digest unavailable.';
+  }
+
+  // ─── CSV Upload (Server ML Pipeline) ────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> uploadCsv(List<int> bytes, String filename) async {
+    final url = Uri.parse('$baseUrl/transactions/upload-csv');
+    final request = http.MultipartRequest('POST', url);
+
+    final headers = await _headers();
+    headers.forEach((k, v) {
+      if (k.toLowerCase() != 'content-type') {
+        request.headers[k] = v;
+      }
+    });
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: filename,
+      ),
+    );
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final err = jsonDecode(response.body);
+    throw Exception(err['detail'] ?? 'CSV upload failed');
   }
 }

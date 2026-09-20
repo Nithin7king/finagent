@@ -52,7 +52,7 @@ function createToken(userId, email) {
 // ─── User Authentication Operations (Express native) ─────────────────────────
 
 // POST /api/auth/register
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', async (req, res, next) => {
   const { email, name, password, monthly_income, currency } = req.body;
   
   if (!email || !name || !password) {
@@ -89,13 +89,13 @@ app.post('/api/auth/register', async (req, res) => {
       email: user.email
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ detail: 'Server registration error.' });
+    console.error('Express DB registration error, falling back to FastAPI proxy:', error.message);
+    return next();
   }
 });
 
 // POST /api/auth/login
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', async (req, res, next) => {
   const { email, password } = req.body;
   
   if (!email || !password) {
@@ -122,8 +122,8 @@ app.post('/api/auth/login', async (req, res) => {
       email: user.email
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ detail: 'Server login error.' });
+    console.error('Express DB login error, falling back to FastAPI proxy:', error.message);
+    return next();
   }
 });
 

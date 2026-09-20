@@ -28,10 +28,12 @@ class LedgerTransaction {
     final isAnomaly = json['anomaly_label'] == true;
     final cat = json['category'] ?? json['ml_category'] ?? 'Other';
     final isUserCorrected = json['source'] == 'manual' || (json['category'] != null && json['category'] != json['ml_category']);
+    final dateStr = json['date']?.toString() ?? '';
+    final formattedDate = dateStr.length >= 10 ? dateStr.substring(0, 10) : dateStr;
 
     return LedgerTransaction(
       id: json['id'].toString(),
-      date: json['date'] != null ? json['date'].toString().substring(0, 10) : '',
+      date: formattedDate,
       description: json['description'] ?? '',
       amount: rawAmount,
       category: cat,

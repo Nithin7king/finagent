@@ -21,6 +21,7 @@ class FinProvider extends ChangeNotifier {
 
   bool _isLoading = true;
   bool _isChatLoading = false;
+  bool _isBackendConnected = true;
   ThemeMode _themeMode = ThemeMode.dark;
   String? _sessionId;
   int _currentNavIndex = 0; // 0: Dashboard, 1: Ledger, 2: Analytics, 3: Goals, 4: Chat
@@ -36,6 +37,7 @@ class FinProvider extends ChangeNotifier {
   List<ChatTurn> get chatHistory => _chatHistory;
   bool get isLoading => _isLoading;
   bool get isChatLoading => _isChatLoading;
+  bool get isBackendConnected => _isBackendConnected;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   int get currentNavIndex => _currentNavIndex;
@@ -62,6 +64,8 @@ class FinProvider extends ChangeNotifier {
       if (savedTheme != null) {
         _themeMode = savedTheme == 'light' ? ThemeMode.light : ThemeMode.dark;
       }
+
+      _isBackendConnected = await ApiService.checkHealth();
 
       final token = await ApiService.getToken();
       if (token != null && token.isNotEmpty) {
