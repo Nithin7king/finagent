@@ -73,9 +73,8 @@ class FinTheme {
         error: FinColors.darkCoral,
         surface: FinColors.darkInkRaised,
         onSurface: Colors.white,
-        background: FinColors.darkInk,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: FinColors.darkInkRaised,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -147,9 +146,8 @@ class FinTheme {
         error: FinColors.lightCoral,
         surface: FinColors.lightInkRaised,
         onSurface: FinColors.lightInkText,
-        background: FinColors.lightInk,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: FinColors.lightInkRaised,
         elevation: 1,
         shape: RoundedRectangleBorder(

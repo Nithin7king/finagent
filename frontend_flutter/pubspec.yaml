@@ -20,13 +20,13 @@ dependencies:
   shared_preferences: ^2.2.3
 
   # Charts & Visualizations
-  fl_chart: ^0.68.0
+  fl_chart: ^1.2.0
 
   # Typography (Fraunces, Inter, IBM Plex Mono)
-  google_fonts: ^6.2.1
+  google_fonts: ^8.2.1
 
   # Internationalization & Currency Formatting (INR)
-  intl: ^0.19.0
+  intl: ^0.20.3
 
   # Icons
   cupertino_icons: ^1.0.8
@@ -34,7 +34,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

@@ -41,7 +41,6 @@ class StampBadge extends StatelessWidget {
         bgColor = Colors.transparent;
         break;
       case StampType.gold:
-      default:
         borderColor = (isDark ? FinColors.darkGold : FinColors.lightGold).withOpacity(0.4);
         textColor = isDark ? FinColors.darkGold : FinColors.lightGold;
         bgColor = (isDark ? FinColors.darkGold : FinColors.lightGold).withOpacity(0.05);
