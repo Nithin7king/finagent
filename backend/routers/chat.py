@@ -25,15 +25,28 @@ def chat(
     The agent uses multi-step reasoning, tool calls, and RAG to answer.
     """
     session_id = data.session_id or str(uuid.uuid4())
-    agent = AgentPlanner(db=db, user_id=current_user.id, session_id=session_id)
-    result = agent.respond(data.message)
+    try:
+        agent = AgentPlanner(db=db, user_id=current_user.id, session_id=session_id)
+        result = agent.respond(data.message)
 
-    return schemas.ChatResponse(
-        response=result["response"],
-        sources=result.get("sources", []),
-        tool_calls_made=result.get("tool_calls_made", []),
-        session_id=result["session_id"],
-    )
+        return schemas.ChatResponse(
+            response=result["response"],
+            sources=result.get("sources", []),
+            tool_calls_made=result.get("tool_calls_made", []),
+            session_id=result["session_id"],
+        )
+    except Exception as e:
+        print(f"[Chat Router] Error in agent execution: {e}")
+        import traceback
+        traceback.print_exc()
+        from backend.rag.engine import _offline_response
+        fallback = _offline_response(data.message)
+        return schemas.ChatResponse(
+            response=fallback,
+            sources=[],
+            tool_calls_made=["offline_fallback"],
+            session_id=session_id,
+        )
 
 
 @router.get("/history")

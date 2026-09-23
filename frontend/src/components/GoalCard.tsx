@@ -56,81 +56,80 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
   };
 
   return (
-    <div className="bg-ink-raised border border-gold/10 p-6 rounded-sm flex flex-col justify-between hover:border-gold/30 transition-all duration-300 relative overflow-hidden">
+    <div className="bg-ink-raised border border-white/10 p-5 rounded-2xl flex flex-col justify-between hover:border-white/20 transition-all duration-200 relative overflow-hidden shadow-lg shadow-black/20">
       
-      {/* Decorative Stamp Tag */}
-      <div className="absolute top-4 right-4 bg-gold/5 border border-gold/15 text-[9px] font-mono font-medium text-gold px-2 py-0.5 uppercase rounded-sm select-none">
+      {/* Category Pill Tag */}
+      <div className="absolute top-4 right-4 bg-blue-500/10 border border-blue-500/20 text-[10px] font-semibold text-blue-300 px-2.5 py-0.5 rounded-full">
         {goal.category}
       </div>
 
       <div>
         <div className="flex items-center space-x-2.5">
-          <Target className="w-4.5 h-4.5 text-gold" />
-          <h4 className="font-display text-base text-white tracking-wide font-medium">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <Target className="w-4 h-4" />
+          </div>
+          <h4 className="text-base text-white font-semibold">
             {goal.name}
           </h4>
         </div>
 
-        {/* Amount Progress Monospace Row */}
-        <div className="mt-5 flex items-baseline justify-between text-xs font-mono">
+        {/* Progress figures */}
+        <div className="mt-4 flex items-baseline justify-between text-xs">
           <span className="text-mist">Saved: <strong className="text-white font-bold">{formatValue(goal.currentAmount)}</strong></span>
-          <span className="text-mist/50">Target: {formatValue(goal.targetAmount)}</span>
+          <span className="text-mist">Target: {formatValue(goal.targetAmount)}</span>
         </div>
 
-        {/* Progress Bar (Gold Fill) */}
-        <div className="mt-2.5 h-1.5 w-full bg-ink rounded-sm overflow-hidden border border-gold/5">
+        {/* Progress Bar (Emerald fill) */}
+        <div className="mt-2 h-2 w-full bg-ink rounded-full overflow-hidden">
           <div 
-            className="h-full bg-gold transition-all duration-500 ease-out"
+            className={`h-full transition-all duration-500 ease-out rounded-full ${
+              percentage >= 100 ? 'bg-emerald-400' : 'bg-gradient-to-r from-blue-500 to-emerald-400'
+            }`}
             style={{ width: `${percentage}%` }}
           />
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-[10px] font-mono">
-          <span className="text-gold font-bold">{percentage}% Completed</span>
-          <span className="text-mist/60">Date: {goal.targetDate}</span>
+        <div className="mt-2 flex items-center justify-between text-xs">
+          <span className="text-emerald-400 font-semibold">{percentage}% saved</span>
+          <span className="text-mist text-[11px]">Target: {goal.targetDate}</span>
         </div>
       </div>
 
       {/* Contribute Actions */}
-      <div className="mt-6 pt-5 border-t border-gold/10">
+      <div className="mt-5 pt-4 border-t border-white/5">
         {success ? (
-          <div className="py-1 text-center text-xs font-mono text-sage flex items-center justify-center space-x-1.5 animate-pulse">
+          <div className="py-1 text-center text-xs font-medium text-emerald-400 flex items-center justify-center space-x-1.5 animate-pulse">
             <CheckCircle2 className="w-4 h-4" />
-            <span>Contribution Logged Successfully!</span>
+            <span>Savings recorded successfully!</span>
           </div>
         ) : !isContributing ? (
-          <div className="flex items-center justify-between gap-2.5">
-            {/* Quick allocation presets */}
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center space-x-1.5">
-              <button 
-                onClick={() => handleQuickPreset(5000)}
-                disabled={isSubmitting}
-                className="px-2 py-1 bg-ink border border-gold/10 rounded-sm text-[10px] font-mono text-mist hover:text-white hover:border-gold/35 transition-all cursor-pointer"
-              >
-                +₹5K
-              </button>
-              <button 
-                onClick={() => handleQuickPreset(10000)}
-                disabled={isSubmitting}
-                className="px-2 py-1 bg-ink border border-gold/10 rounded-sm text-[10px] font-mono text-mist hover:text-white hover:border-gold/35 transition-all cursor-pointer"
-              >
-                +₹10K
-              </button>
+              {[500, 1000, 5000].map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => handleQuickPreset(preset)}
+                  disabled={isSubmitting}
+                  className="px-2.5 py-1 text-xs font-mono font-medium rounded-lg bg-ink hover:bg-emerald-600 hover:text-white text-mist border border-white/10 transition-all cursor-pointer"
+                >
+                  +₹{preset}
+                </button>
+              ))}
             </div>
 
             <button
               onClick={() => setIsContributing(true)}
               disabled={isSubmitting}
-              className="px-3.5 py-1.5 bg-gold/10 hover:bg-gold text-gold hover:text-ink text-xs font-mono border border-gold/20 font-bold transition-all flex items-center space-x-1.5 rounded-sm cursor-pointer ml-auto"
+              className="px-3 py-1 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white text-xs font-medium border border-emerald-500/20 transition-all flex items-center space-x-1 rounded-lg cursor-pointer ml-auto"
             >
-              <span>Custom</span>
+              <span>+ Custom</span>
               <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex items-center gap-2 animate-[fadeIn_0.15s_ease-out]">
             <div className="relative flex-1">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-mono text-xs text-gold">₹</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-mono text-xs text-emerald-400">₹</span>
               <input
                 type="number"
                 placeholder="Amount"
@@ -138,20 +137,20 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                 onChange={(e) => setAmount(e.target.value)}
                 required
                 disabled={isSubmitting}
-                className="w-full bg-ink border border-gold/25 text-white pl-6 pr-2 py-1 text-xs font-mono rounded-sm focus:border-gold placeholder:text-mist/30"
+                className="w-full bg-ink border border-white/10 text-white pl-6 pr-2 py-1 text-xs font-mono rounded-lg focus:outline-none focus:border-emerald-500 placeholder:text-mist/60"
               />
             </div>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-3 py-1.5 bg-gold text-ink text-xs font-mono font-bold hover:brightness-110 transition-all rounded-sm cursor-pointer"
+              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all rounded-lg cursor-pointer shadow-md shadow-emerald-600/20"
             >
-              Post
+              Save
             </button>
             <button
               type="button"
               onClick={() => setIsContributing(false)}
-              className="px-2 py-1.5 border border-gold/10 text-mist hover:text-white text-xs font-mono rounded-sm cursor-pointer"
+              className="px-2 py-1 border border-white/10 text-mist hover:text-white text-xs rounded-lg cursor-pointer"
             >
               Cancel
             </button>

@@ -42,6 +42,14 @@ backend/ml/anomaly_stats.joblib
 backend/ml/categorizer_model.joblib
 *.joblib
 chroma_db/
+datasets/
+Credit Card Transactions Fraud Detection Dataset/
+Credit card Fraud detection/
+Daily Transactions Dataset/
+Indian Personal Finance and Spending Habits/
+Personal Expense Classification Dataset/
+Synthetic Financial Datasets For Fraud Detection/
+
 
 # ── Node / JavaScript / TypeScript ────────────────────────────────────────────
 node_modules/

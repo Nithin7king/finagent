@@ -15,7 +15,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
   const isAgent = message.sender === 'agent';
   const [showReasoning, setShowReasoning] = useState(false);
 
-  // Elegant helper to render basic markdown elements (bold, lists, tables) safely
+  // Helper to render basic markdown elements (bold, lists, tables) safely
   const formatText = (txt: string) => {
     const lines = txt.split('\n');
     let inList = false;
@@ -28,7 +28,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
       const parts = input.split('**');
       return parts.map((part, index) => {
         if (index % 2 === 1) {
-          return <strong key={index} className="text-gold font-bold">{part}</strong>;
+          return <strong key={index} className="font-semibold text-white">{part}</strong>;
         }
         return part;
       });
@@ -50,20 +50,20 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
         // End of table, compile it
         inTable = false;
         elements.push(
-          <div key={`table-${index}`} className="my-3 overflow-x-auto border border-gold/15 rounded-sm">
-            <table className="w-full text-left border-collapse text-xs font-mono bg-ink/40">
+          <div key={`table-${index}`} className="my-3 overflow-x-auto border border-white/10 rounded-xl">
+            <table className="w-full text-left border-collapse text-xs bg-slate-950/60">
               <thead>
-                <tr className="border-b border-gold/15 bg-gold/5 text-gold font-semibold">
+                <tr className="border-b border-white/10 bg-white/5 text-slate-300 font-semibold">
                   {tableRows[0].map((col, idx) => (
-                    <th key={idx} className="py-2 px-3">{col}</th>
+                    <th key={idx} className="py-2.5 px-3.5">{col}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-white/5">
                 {tableRows.slice(1).map((row, rowIdx) => (
-                  <tr key={rowIdx} className="border-b border-gold/5 hover:bg-gold/5">
+                  <tr key={rowIdx} className="hover:bg-white/[0.02]">
                     {row.map((col, colIdx) => (
-                      <td key={colIdx} className="py-2 px-3 text-white/95 tabular-nums">{col}</td>
+                      <td key={colIdx} className="py-2 px-3.5 text-slate-200">{col}</td>
                     ))}
                   </tr>
                 ))}
@@ -81,7 +81,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
           inList = true;
         }
         elements.push(
-          <li key={`li-${index}`} className="list-disc ml-5 text-sm text-mist/95 mb-1 leading-relaxed">
+          <li key={`li-${index}`} className="list-disc ml-5 text-sm text-slate-200 mb-1 leading-relaxed">
             {parseInlineBold(itemText)}
           </li>
         );
@@ -92,10 +92,10 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
 
       // Standard Paragraph
       if (trimmed === '') {
-        elements.push(<div key={`spacer-${index}`} className="h-2.5" />);
+        elements.push(<div key={`spacer-${index}`} className="h-2" />);
       } else {
         elements.push(
-          <p key={`p-${index}`} className="text-sm text-mist/95 leading-relaxed mb-1.5">
+          <p key={`p-${index}`} className="text-sm leading-relaxed mb-1 text-slate-200">
             {parseInlineBold(trimmed)}
           </p>
         );
@@ -105,20 +105,20 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
     // Cleanup remaining table if any
     if (inTable && tableRows.length > 0) {
       elements.push(
-        <div key="table-end" className="my-3 overflow-x-auto border border-gold/15 rounded-sm">
-          <table className="w-full text-left border-collapse text-xs font-mono bg-ink/40">
+        <div key="table-end" className="my-3 overflow-x-auto border border-white/10 rounded-xl">
+          <table className="w-full text-left border-collapse text-xs bg-slate-950/60">
             <thead>
-              <tr className="border-b border-gold/15 bg-gold/5 text-gold font-semibold">
+              <tr className="border-b border-white/10 bg-white/5 text-slate-300 font-semibold">
                 {tableRows[0].map((col, idx) => (
-                  <th key={idx} className="py-2 px-3">{col}</th>
+                  <th key={idx} className="py-2.5 px-3.5">{col}</th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/5">
               {tableRows.slice(1).map((row, rowIdx) => (
-                <tr key={rowIdx} className="border-b border-gold/5 hover:bg-gold/5">
+                <tr key={rowIdx} className="hover:bg-white/[0.02]">
                   {row.map((col, colIdx) => (
-                    <td key={colIdx} className="py-2 px-3 text-white/95 tabular-nums">{col}</td>
+                    <td key={colIdx} className="py-2 px-3.5 text-slate-200">{col}</td>
                   ))}
                 </tr>
               ))}
@@ -132,34 +132,41 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
   };
 
   return (
-    <div className={`flex w-full ${isAgent ? 'justify-start' : 'justify-end'} mb-5 animate-[fadeIn_0.15s_ease-out]`}>
-      <div className={`max-w-[85%] md:max-w-[70%] flex items-start space-x-3`}>
-        {isAgent && (
-          <div className="w-7 h-7 bg-gold/10 border border-gold/30 flex items-center justify-center rounded-sm shrink-0">
-            <Bot className="w-4 h-4 text-gold" />
+    <div className={`flex w-full ${isAgent ? 'justify-start' : 'justify-end'} mb-4 animate-[fadeIn_0.15s_ease-out]`}>
+      <div className={`max-w-[88%] md:max-w-[75%] flex items-start space-x-2.5 ${!isAgent ? 'flex-row-reverse space-x-reverse' : ''}`}>
+        
+        {/* Avatar */}
+        {isAgent ? (
+          <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0 mt-0.5">
+            <Bot className="w-4 h-4" />
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-xl bg-ink-tertiary border border-white/10 flex items-center justify-center text-mist shrink-0 mt-0.5">
+            <User className="w-4 h-4" />
           </div>
         )}
 
-        <div className="flex flex-col space-y-1.5">
+        <div className="flex flex-col space-y-1.5 flex-1 min-w-0">
+          
           {/* Tool Calls Expansion strip (collapsible reasoning) */}
           {isAgent && message.toolCalls && message.toolCalls.length > 0 && (
-            <div className="bg-ink border border-gold/10 p-2 rounded-sm text-[10px] font-mono text-gold/80 select-none">
+            <div className="bg-ink border border-white/10 p-2.5 rounded-xl text-xs text-mist select-none">
               <button 
                 onClick={() => setShowReasoning(!showReasoning)}
                 className="flex items-center justify-between w-full font-medium cursor-pointer hover:text-white transition-colors"
               >
-                <div className="flex items-center space-x-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-sage" />
-                  <span>Verified {message.toolCalls.length} Agent Tasks</span>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Checked {message.toolCalls.length} account source{message.toolCalls.length > 1 ? 's' : ''}</span>
                 </div>
-                {showReasoning ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                {showReasoning ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
               
               {showReasoning && (
-                <div className="mt-1.5 pt-1.5 border-t border-gold/5 space-y-1 text-mist/85 font-sans pl-5 list-decimal list-inside">
+                <div className="mt-2 pt-2 border-t border-white/5 space-y-1 text-mist text-xs">
                   {message.toolCalls.map((t, idx) => (
-                    <div key={idx} className="flex items-center space-x-1.5 text-[9px]">
-                      <span className="text-gold">✔</span>
+                    <div key={idx} className="flex items-center space-x-2">
+                      <span className="text-emerald-400">✓</span>
                       <span>{t}</span>
                     </div>
                   ))}
@@ -170,26 +177,20 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
 
           {/* Core Bubble Content */}
           <div 
-            className={`p-4.5 rounded-sm ${
+            className={`p-4 rounded-2xl text-sm ${
               isAgent 
-                ? 'bg-ink-raised border border-gold/10 text-white' 
-                : 'bg-gold/5 border border-gold/20 text-white'
+                ? 'bg-ink border border-white/10 text-white rounded-tl-sm shadow-sm' 
+                : 'bg-blue-600 text-white rounded-tr-sm shadow-md shadow-blue-600/20'
             }`}
           >
             {formatText(message.text)}
           </div>
 
-          {/* Message Timestamp */}
-          <span className="text-[9px] font-mono text-mist/40 px-1 self-start select-none">
+          {/* Timestamp */}
+          <span className={`text-[10px] text-slate-500 px-1 select-none ${!isAgent ? 'text-right' : 'text-left'}`}>
             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
-
-        {!isAgent && (
-          <div className="w-7 h-7 bg-gold/10 border border-gold/20 flex items-center justify-center rounded-sm shrink-0">
-            <User className="w-4 h-4 text-gold" />
-          </div>
-        )}
       </div>
     </div>
   );

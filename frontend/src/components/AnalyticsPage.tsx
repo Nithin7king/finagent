@@ -66,98 +66,124 @@ export const AnalyticsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-[fadeIn_0.2s_ease-out]">
-      <div className="border-b border-gold/10 pb-5">
-        <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-gold font-bold">
-          STATISTICAL LEDGER AUDIT
-        </div>
-        <h2 className="text-3.5xl font-display font-medium text-white tracking-tight italic mt-1">
-          Analytics & Audits
+      {/* Header */}
+      <div className="border-b border-white/5 pb-2">
+        <h2 className="text-2xl font-bold text-white tracking-tight">
+          Spending Insights & Analytics
         </h2>
+        <p className="text-sm text-slate-400 mt-1">
+          Detect unusual expenses, manage monthly recurring bills, and simulate how much you can save.
+        </p>
       </div>
 
-      {/* Passbook style horizontal tab strip */}
-      <div className="border-b border-gold/15 flex space-x-8 text-sm font-mono tracking-wide">
+      {/* Modern navigation pill tabs */}
+      <div className="flex space-x-2 border-b border-white/10 pb-3">
         <button
           onClick={() => setActiveTab('anomalies')}
-          className={`pb-3 border-b-2 transition-all font-medium cursor-pointer ${
-            activeTab === 'anomalies' ? 'border-gold text-gold font-bold' : 'border-transparent text-mist hover:text-white'
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+            activeTab === 'anomalies'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          Ledger Anomalies ({activeAnomalies.length})
+          <AlertOctagon className="w-4 h-4" />
+          <span>Unusual Charges</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === 'anomalies' ? 'bg-blue-700 text-white' : 'bg-slate-800 text-slate-300'}`}>
+            {activeAnomalies.length}
+          </span>
         </button>
+
         <button
           onClick={() => setActiveTab('subscriptions')}
-          className={`pb-3 border-b-2 transition-all font-medium cursor-pointer ${
-            activeTab === 'subscriptions' ? 'border-gold text-gold font-bold' : 'border-transparent text-mist hover:text-white'
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+            activeTab === 'subscriptions'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          Subscription Audits ({subscriptions.length})
+          <Receipt className="w-4 h-4" />
+          <span>Recurring Subscriptions</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === 'subscriptions' ? 'bg-blue-700 text-white' : 'bg-slate-800 text-slate-300'}`}>
+            {subscriptions.length}
+          </span>
         </button>
+
         <button
           onClick={() => setActiveTab('whatif')}
-          className={`pb-3 border-b-2 transition-all font-medium cursor-pointer ${
-            activeTab === 'whatif' ? 'border-gold text-gold font-bold' : 'border-transparent text-mist hover:text-white'
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+            activeTab === 'whatif'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          What-If Forecasting
+          <Sliders className="w-4 h-4" />
+          <span>Savings Simulator</span>
         </button>
       </div>
 
-      {/* Tab Contents */}
+      {/* Tab 1: Unusual Charges */}
       {activeTab === 'anomalies' && (
-        <div className="space-y-6">
-          <div className="bg-ink-raised border border-gold/10 p-6 rounded-sm">
-            <h3 className="font-display text-lg text-white font-medium mb-1">Discrepancy Matrix</h3>
-            <p className="text-xs text-mist leading-relaxed font-sans max-w-2xl">
-              Anomalies are flagged by comparing incoming ledger item values with your historical standard deviation bounds. High-severity alerts should be disputed directly.
-            </p>
+        <div className="space-y-4">
+          <div className="bg-ink-raised border border-white/10 p-5 rounded-2xl flex items-start justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-white">Smart Anomaly Detection</h3>
+              <p className="text-sm text-mist mt-1 max-w-2xl leading-relaxed">
+                MYFI monitors your usual spending patterns. If a transaction is unexpectedly high or out of the ordinary, it's flagged here so you can review or dispute it.
+              </p>
+            </div>
           </div>
 
           {activeAnomalies.length === 0 ? (
-            <div className="p-12 border border-gold/10 rounded-sm text-center font-mono text-mist/60 bg-ink-raised italic">
-              Your accounts have zero pending anomaly concerns.
+            <div className="p-12 border border-white/10 rounded-2xl text-center text-mist bg-ink-raised">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="text-white font-medium">All Clear! No unusual expenses found</div>
+              <p className="text-xs text-mist mt-1">All your recent transactions align with your normal spending patterns.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-3.5">
               {activeAnomalies.map((anom) => {
-                // Color grading for severity intensity
-                const severityColors = {
-                  Low: 'border-gold/30 text-gold bg-gold/5',
-                  Medium: 'border-gold text-gold bg-gold/10',
-                  High: 'border-coral/40 text-coral bg-coral/5',
+                const severityBadge = {
+                  Low: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                  Medium: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+                  High: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
                 };
                 
                 return (
                   <div 
                     key={anom.id}
-                    className="bg-ink-raised border border-gold/10 p-6 rounded-sm flex flex-col md:flex-row md:items-start justify-between gap-5 hover:border-gold/30 transition-all"
+                    className="bg-ink-raised border border-white/10 p-5 rounded-2xl flex flex-col md:flex-row md:items-start justify-between gap-4 hover:border-white/20 transition-all"
                   >
-                    <div className="flex items-start space-x-4">
-                      <div className="w-9 h-9 bg-ink rounded-sm flex items-center justify-center text-coral shrink-0 border border-gold/10">
-                        <AlertOctagon className="w-5 h-5 text-coral" />
+                    <div className="flex items-start space-x-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                        <AlertOctagon className="w-5 h-5" />
                       </div>
                       <div className="space-y-1">
-                        <div className="flex items-center space-x-3 flex-wrap gap-y-1">
-                          <span className="text-sm font-mono font-bold text-white">{anom.merchant}</span>
-                          <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-sm border ${severityColors[anom.severity]}`}>
-                            {anom.severity} Severity
+                        <div className="flex items-center space-x-2.5 flex-wrap">
+                          <span className="text-sm font-semibold text-white">{anom.merchant}</span>
+                          <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${severityBadge[anom.severity] || severityBadge.Medium}`}>
+                            {anom.severity} Alert
                           </span>
                         </div>
-                        <div className="text-xs font-mono text-gold/80 font-bold tabular-nums">
-                          Debit Amount: {formatCurrency(anom.amount)} • Date: {anom.date}
+                        <div className="text-xs text-mist flex items-center space-x-3">
+                          <span className="font-mono font-medium text-rose-400">{formatCurrency(anom.amount)}</span>
+                          <span>•</span>
+                          <span>Date: {anom.date}</span>
                         </div>
-                        <p className="text-xs text-mist leading-relaxed font-sans max-w-3xl pt-1">
+                        <p className="text-xs text-mist leading-relaxed pt-1">
                           {anom.explanation}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2.5 shrink-0 self-end md:self-auto">
+                    <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
                       <button 
-                        onClick={() => window.location.pathname = '/chat'} // Jump to chat
-                        className="px-4 py-2 bg-gold/10 hover:bg-gold hover:text-ink text-gold border border-gold/20 font-mono text-xs font-bold rounded-sm transition-all cursor-pointer"
+                        onClick={() => window.location.pathname = '/chat'}
+                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 shadow-md shadow-blue-600/20"
                       >
-                        Draft AI Dispute Mail
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Ask AI Assistant</span>
                       </button>
                     </div>
                   </div>
@@ -168,57 +194,58 @@ export const AnalyticsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Tab 2: Recurring Subscriptions */}
       {activeTab === 'subscriptions' && (
-        <div className="space-y-6">
-          <div className="bg-ink-raised border border-gold/10 p-6 rounded-sm">
-            <h3 className="font-display text-lg text-white font-medium mb-1">Ongoing Subscriptions Audit</h3>
-            <p className="text-xs text-mist leading-relaxed font-sans max-w-2xl">
-              We track recurring ledger cycles to calculate your **Subscription Creep Score**. Scores above 60 indicate unrecognized draft items or inactive memberships that should be cancelled.
+        <div className="space-y-4">
+          <div className="bg-ink-raised border border-white/10 p-5 rounded-2xl">
+            <h3 className="text-base font-semibold text-white">Active Subscriptions & Recurring Bills</h3>
+            <p className="text-sm text-mist mt-1 max-w-2xl leading-relaxed">
+              These recurring charges were automatically identified from your bank statements (e.g. Netflix, Prime, gym memberships, SIPs). Review them regularly to cancel unused services.
             </p>
           </div>
 
-          <div className="bg-paper text-ink-text border border-gold/10 rounded-sm overflow-hidden shadow-xl">
+          <div className="bg-ink-raised border border-white/10 rounded-2xl overflow-hidden shadow-xl">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-ink/15 font-mono text-[10px] tracking-wider text-ink-text/50 bg-ink/[0.02]">
-                  <th className="py-3.5 px-8 font-semibold uppercase">Merchant Provider</th>
-                  <th className="py-3.5 px-8 font-semibold uppercase">Billing Cycle</th>
-                  <th className="py-3.5 px-8 font-semibold uppercase text-right">Outflow Amount</th>
-                  <th className="py-3.5 px-8 font-semibold uppercase">Next Draft Date</th>
-                  <th className="py-3.5 px-8 font-semibold uppercase text-center w-52">Creep Score</th>
+                <tr className="border-b border-white/10 text-xs font-semibold uppercase tracking-wider text-mist bg-ink/30">
+                  <th className="py-3 px-5">Service / Provider</th>
+                  <th className="py-3 px-5">Frequency</th>
+                  <th className="py-3 px-5 text-right">Amount</th>
+                  <th className="py-3 px-5">Next Expected Charge</th>
+                  <th className="py-3 px-5 text-center">Renewal Risk</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-white/5 text-sm">
                 {subscriptions.map((sub) => {
-                  // Color graded creep bars
                   const isHighCreep = sub.creepScore >= 60;
-                  const barColor = isHighCreep ? 'bg-coral' : 'bg-gold';
 
                   return (
-                    <tr key={sub.id} className="border-b border-ink/10 text-sm hover:bg-ink/[0.015]">
-                      <td className="py-4.5 px-8 font-sans font-bold text-ink-text">
-                        {sub.merchant}
+                    <tr key={sub.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3.5 px-5 font-medium text-white flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
+                          {sub.merchant.charAt(0)}
+                        </div>
+                        <span>{sub.merchant}</span>
                       </td>
-                      <td className="py-4.5 px-8 font-mono text-xs text-ink-text/60">
+                      <td className="py-3.5 px-5 text-mist text-xs capitalize">
                         {sub.cadence}
                       </td>
-                      <td className="py-4.5 px-8 text-right font-mono font-bold text-coral tabular-nums">
+                      <td className="py-3.5 px-5 text-right font-mono font-medium text-rose-400">
                         {formatCurrency(sub.amount)}
                       </td>
-                      <td className="py-4.5 px-8 font-mono text-xs text-ink-text/70">
+                      <td className="py-3.5 px-5 text-mist text-xs">
                         {sub.nextChargeDate}
                       </td>
-                      <td className="py-4.5 px-8 text-center">
-                        <div className="flex items-center space-x-3.5 max-w-[150px] mx-auto">
-                          {/* Horizontal creep score bar */}
-                          <div className="h-2 flex-1 bg-ink/10 rounded-sm overflow-hidden border border-ink/5">
+                      <td className="py-3.5 px-5 text-center">
+                        <div className="flex items-center space-x-2 max-w-[130px] mx-auto">
+                          <div className="h-1.5 flex-1 bg-ink rounded-full overflow-hidden">
                             <div 
-                              className={`h-full ${barColor}`}
+                              className={`h-full ${isHighCreep ? 'bg-rose-500' : 'bg-emerald-500'}`}
                               style={{ width: `${sub.creepScore}%` }}
                             />
                           </div>
-                          <span className={`text-[10px] font-mono font-bold tabular-nums ${isHighCreep ? 'text-coral' : 'text-gold'}`}>
-                            {sub.creepScore}/100
+                          <span className={`text-xs font-mono font-medium ${isHighCreep ? 'text-rose-400' : 'text-mist'}`}>
+                            {sub.creepScore}%
                           </span>
                         </div>
                       </td>
@@ -231,34 +258,40 @@ export const AnalyticsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Tab 3: What-If Savings Simulator */}
       {activeTab === 'whatif' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           
-          {/* Simulator Form panel */}
-          <div className="bg-ink-raised border border-gold/10 p-6 rounded-sm flex flex-col justify-between">
+          {/* Controls Panel */}
+          <div className="bg-ink-raised border border-white/10 p-5 rounded-2xl flex flex-col justify-between">
             <div>
-              <div className="flex items-center space-x-2.5 border-b border-gold/5 pb-4 mb-5">
-                <Sliders className="w-5 h-5 text-gold" />
-                <h3 className="font-display text-lg text-white font-medium">Outflow Simulator</h3>
+              <div className="flex items-center space-x-2.5 pb-4 border-b border-white/10 mb-5">
+                <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-white">Savings Simulator</h3>
+                  <p className="text-xs text-mist">Test how much you can save</p>
+                </div>
               </div>
 
-              <p className="text-xs text-mist leading-relaxed font-sans mb-6">
-                Adjust the sliding constraints to test what-if scenarios. Shrinking variable outlays dynamically updates our forecast projection modules.
+              <p className="text-xs text-mist leading-relaxed mb-5">
+                Choose an expense category and slide to adjust how much you'd like to cut. See the instant impact on your monthly savings!
               </p>
 
-              <div className="space-y-6 font-mono text-xs">
+              <div className="space-y-5 text-sm">
                 {/* Category selection */}
                 <div>
-                  <label className="block text-[10px] text-mist uppercase tracking-wider mb-2">Target Outflow Category</label>
+                  <label className="block text-xs font-medium text-mist mb-2">Select Category</label>
                   <div className="grid grid-cols-3 gap-2">
                     {(['Food', 'Shopping', 'Utilities'] as const).map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`py-2 px-3 text-center border font-mono rounded-sm text-xs transition-all cursor-pointer ${
+                        className={`py-2 px-3 text-center rounded-xl text-xs font-medium transition-all cursor-pointer ${
                           selectedCategory === cat
-                            ? 'border-gold text-gold bg-gold/5 font-semibold'
-                            : 'border-gold/10 text-mist hover:text-white hover:border-gold/30'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                            : 'border border-white/10 text-mist hover:text-white hover:bg-white/5'
                         }`}
                       >
                         {cat}
@@ -269,9 +302,9 @@ export const AnalyticsPage: React.FC = () => {
 
                 {/* Reduction Percentage Slider */}
                 <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] text-mist uppercase">
-                    <span>Reduction Constraints</span>
-                    <span className="text-gold font-bold">{reductionPercent}% Cut</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-mist font-medium">Reduction Target:</span>
+                    <span className="text-blue-400 font-bold">{reductionPercent}% Less</span>
                   </div>
                   <input
                     type="range"
@@ -280,52 +313,58 @@ export const AnalyticsPage: React.FC = () => {
                     step="5"
                     value={reductionPercent}
                     onChange={(e) => setReductionPercent(Number(e.target.value))}
-                    className="w-full accent-gold bg-ink rounded-sm h-1.5 focus:outline-none focus:ring-0 cursor-pointer"
+                    className="w-full accent-blue-500 bg-ink rounded-lg h-2 cursor-pointer"
                   />
-                  <div className="flex justify-between text-[8px] font-mono text-mist/40 uppercase">
-                    <span>0% (As Is)</span>
-                    <span>50% (Trimmed)</span>
-                    <span>100% (Absolute Zero)</span>
+                  <div className="flex justify-between text-[11px] text-mist/70">
+                    <span>0% (No change)</span>
+                    <span>50% (Moderate)</span>
+                    <span>100% (Strict)</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Impact details */}
-            <div className="mt-8 pt-5 border-t border-gold/10 space-y-4">
-              <div className="bg-ink/35 border border-gold/5 p-4 rounded-sm space-y-2 font-mono">
-                <div className="flex justify-between text-xs text-mist">
-                  <span>Current {selectedCategory} Outflow:</span>
-                  <span className="text-white font-bold tabular-nums">{formatCurrency(categorySpend)}</span>
+            {/* Impact Summary Box */}
+            <div className="mt-6 pt-4 border-t border-white/10 space-y-3">
+              <div className="bg-ink border border-white/10 p-4 rounded-xl space-y-2.5 text-xs">
+                <div className="flex justify-between text-mist">
+                  <span>Current {selectedCategory} Spending:</span>
+                  <span className="text-white font-mono font-medium">{formatCurrency(categorySpend)}/mo</span>
                 </div>
-                <div className="flex justify-between text-xs text-mist">
-                  <span>Simulated Savings Rate:</span>
-                  <span className="text-sage font-bold tabular-nums">+{formatCurrency(savedAmount)} / mo</span>
+                <div className="flex justify-between text-emerald-400 font-medium">
+                  <span>Potential Monthly Savings:</span>
+                  <span className="font-mono font-bold">+{formatCurrency(savedAmount)}</span>
                 </div>
-                <div className="border-t border-gold/5 pt-2 flex justify-between text-xs">
-                  <span className="text-gold font-bold">Optimized Monthly Surplus:</span>
-                  <span className="text-gold font-bold tabular-nums">₹{savedAmount.toLocaleString('en-IN')}</span>
+                <div className="border-t border-white/5 pt-2 flex justify-between text-blue-300 font-semibold">
+                  <span>Estimated Annual Savings:</span>
+                  <span className="font-mono font-bold">₹{(savedAmount * 12).toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              <div className="text-[9px] font-mono text-mist/40 text-center leading-normal">
-                SIMULATION CODES RUN DIRECTLY AGAINST MEMORY LEDGER REGISTER FOR TRIAL ESTIMATES.
-              </div>
+              <p className="text-[11px] text-mist/70 text-center">
+                This is a simulation to help your financial planning. Your actual accounts are untouched.
+              </p>
             </div>
           </div>
 
-          {/* Shifting Line Chart visualization */}
-          <div className="lg:col-span-2 bg-ink-raised border border-gold/10 p-6 rounded-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between border-b border-gold/5 pb-4 mb-6">
+          {/* Forecast Comparison Chart */}
+          <div className="lg:col-span-2 bg-ink-raised border border-white/10 p-5 rounded-2xl flex flex-col justify-between">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
               <div>
-                <h3 className="font-display text-lg font-medium text-white">Impact Analysis Matrix</h3>
-                <p className="text-[10px] font-mono text-mist uppercase tracking-wider mt-0.5">Optimized vs Baseline Outflow Forecasting</p>
+                <h3 className="text-base font-semibold text-white">Projected Outflow Comparison</h3>
+                <p className="text-xs text-mist mt-0.5">Current trajectory vs. after your simulated savings</p>
               </div>
               
               {/* Chart Legend */}
-              <div className="flex items-center space-x-4 text-[10px] font-mono text-mist">
-                <span className="flex items-center space-x-1"><span className="w-2.5 h-[1.5px] bg-mist" /><span>Baseline</span></span>
-                <span className="flex items-center space-x-1"><span className="w-2.5 h-[1.5px] bg-gold" /><span>Simulated</span></span>
+              <div className="flex items-center space-x-4 text-xs">
+                <span className="flex items-center space-x-1.5 text-mist">
+                  <span className="w-2.5 h-0.5 bg-slate-500" />
+                  <span>Current Path</span>
+                </span>
+                <span className="flex items-center space-x-1.5 text-emerald-400 font-medium">
+                  <span className="w-2.5 h-0.5 bg-emerald-500" />
+                  <span>With Savings</span>
+                </span>
               </div>
             </div>
 
@@ -335,16 +374,16 @@ export const AnalyticsPage: React.FC = () => {
                   data={comparisonChartData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--accent-gold)" strokeOpacity={0.08} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" strokeOpacity={0.4} />
                   <XAxis 
                     dataKey="name" 
-                    stroke="var(--text-secondary)" 
+                    stroke="#94a3b8" 
                     tickLine={false} 
                     axisLine={false}
                     dy={10}
                   />
                   <YAxis 
-                    stroke="var(--text-secondary)" 
+                    stroke="#94a3b8" 
                     tickLine={false} 
                     axisLine={false}
                     tickFormatter={(val) => `₹${val/1000}K`}
@@ -354,19 +393,21 @@ export const AnalyticsPage: React.FC = () => {
                     content={({ active, payload }: any) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-ink border border-gold text-white p-3 font-mono text-xs shadow-2xl rounded-sm">
-                            <div className="font-bold text-gold border-b border-gold/15 pb-1 mb-2 text-[10px] uppercase tracking-wider">Forecast Delta</div>
-                            <div className="flex justify-between space-x-4 py-0.5">
-                              <span className="text-mist">Baseline:</span>
-                              <span className="font-bold tabular-nums">{formatCurrency(payload[0].value)}</span>
+                          <div className="bg-ink-raised border border-white/10 text-white p-3 rounded-xl shadow-xl text-xs space-y-1">
+                            <div className="font-semibold text-mist border-b border-white/10 pb-1 mb-1">
+                              Forecast Comparison
                             </div>
-                            <div className="flex justify-between space-x-4 py-0.5 text-gold">
+                            <div className="flex justify-between space-x-4 text-mist">
+                              <span>Current:</span>
+                              <span className="font-mono font-medium text-white">{formatCurrency(payload[0].value)}</span>
+                            </div>
+                            <div className="flex justify-between space-x-4 text-emerald-400">
                               <span>Optimized:</span>
-                              <span className="font-bold tabular-nums">{formatCurrency(payload[1].value)}</span>
+                              <span className="font-mono font-medium">{formatCurrency(payload[1].value)}</span>
                             </div>
-                            <div className="border-t border-gold/15 mt-2 pt-1 flex justify-between text-sage font-bold text-[10px] uppercase">
-                              <span>Saved Surplus:</span>
-                              <span className="tabular-nums">₹{(payload[0].value - payload[1].value).toLocaleString('en-IN')}</span>
+                            <div className="border-t border-white/10 pt-1 flex justify-between text-emerald-400 font-semibold">
+                              <span>Monthly Saved:</span>
+                              <span className="font-mono">₹{(payload[0].value - payload[1].value).toLocaleString('en-IN')}</span>
                             </div>
                           </div>
                         );
@@ -377,7 +418,7 @@ export const AnalyticsPage: React.FC = () => {
                   <Line 
                     type="monotone" 
                     dataKey="Baseline" 
-                    stroke="var(--text-secondary)" 
+                    stroke="#64748b" 
                     strokeWidth={1.5}
                     strokeDasharray="4 4"
                     dot={false}
@@ -386,17 +427,17 @@ export const AnalyticsPage: React.FC = () => {
                   <Line 
                     type="monotone" 
                     dataKey="Optimized" 
-                    stroke="var(--accent-gold)" 
+                    stroke="#10b981" 
                     strokeWidth={2.5}
-                    dot={{ r: 3, fill: 'var(--accent-gold)' }}
+                    dot={{ r: 3, fill: '#10b981' }}
                     activeDot={{ r: 5 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-5 text-[9px] font-mono text-mist/50 italic border-t border-gold/5 pt-4">
-              * SIMULATION RUNS HYPOTHETICAL CODES — BASE BALANCES AND PAST MONTH TRANSACTIONS IN THE LEDGER REMAIN UNTOUCHED.
+            <div className="mt-4 text-xs text-mist border-t border-white/10 pt-3">
+              Projections update dynamically as you adjust the slider above.
             </div>
           </div>
         </div>

@@ -59,7 +59,8 @@ class SubscriptionDetector:
 
             # Check if amounts are similar (within tolerance)
             amounts = group["amount_abs"].values
-            amount_cv = np.std(amounts) / np.mean(amounts)  # Coefficient of variation
+            mean_amt = np.mean(amounts)
+            amount_cv = (np.std(amounts) / mean_amt) if mean_amt > 0 else 0  # Coefficient of variation
             if amount_cv > 0.15:  # > 15% variation → not subscription
                 continue
 

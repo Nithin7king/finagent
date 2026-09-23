@@ -1,27 +1,43 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { apiFetch, clearToken, getToken, setToken } from './api';
-import { Anomaly, Category, ChatMessage, DashboardSummary, ForecastPoint, Goal, Subscription, Transaction } from './types';
+import { Anomaly, Category, ChatMessage, DashboardSummary, ForecastPoint, Goal, KycData, Subscription, Transaction, UserProfile } from './types';
 
 interface FinContextType {
-  user: { name: string; email: string } | null;
+  user: UserProfile | null;
+  kycData: KycData | null;
+  isKycModalOpen: boolean;
+  setIsKycModalOpen: (open: boolean) => void;
   transactions: Transaction[]; goals: Goal[]; subscriptions: Subscription[];
   chatHistory: ChatMessage[]; summary: DashboardSummary; forecast: ForecastPoint[];
   activeAnomalies: Anomaly[]; currentPage: string; isLoading: boolean;
   isChatLoading: boolean; theme: 'dark' | 'light';
   setPage: (page: string) => void;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error: string | null }>;
+  register: (name: string, email: string, password: string, monthlyIncome?: number) => Promise<{ success: boolean; error: string | null }>;
   logout: () => Promise<void>;
   addTransaction: (tx: Omit<Transaction, 'id' | 'status' | 'balanceAfter' | 'isAnomaly'>) => Promise<void>;
   correctCategory: (txId: string, category: Category) => Promise<void>;
   uploadCSV: (csvText: string) => Promise<Transaction[]>;
+  uploadPDF: (file: File, password?: string) => Promise<{
+    requires_password?: boolean;
+    message?: string;
+    tier_used?: number | null;
+    tier_name?: string | null;
+    warnings?: string[];
+    transactions: Transaction[];
+  }>;
   commitCSV: (txs: Transaction[]) => Promise<void>;
   createGoal: (goal: Omit<Goal, 'id' | 'currentAmount'>) => Promise<void>;
   contributeToGoal: (goalId: string, amount: number) => Promise<void>;
   sendChatMessage: (text: string) => Promise<void>;
   getWeeklyDigest: () => Promise<string>;
+  fetchKycStatus: () => Promise<void>;
+  verifyPan: (panNumber: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+  initiateDigiLocker: (aadhaarNumber: string) => Promise<{ success: boolean; session_id?: string; masked_aadhaar?: string; sandbox_hint?: string; error?: string }>;
+  verifyDigiLockerOtp: (sessionId: string, otp: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   refreshAllData: () => Promise<void>; toggleTheme: () => void;
 }
+
 
 const FinContext = createContext<FinContextType | undefined>(undefined);
 export const useFin = () => {
@@ -49,7 +65,9 @@ const mapTransactions = (rows: any[]): Transaction[] => {
 };
 
 export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [kycData, setKycData] = useState<KycData | null>(null);
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -76,6 +94,16 @@ export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const setPage = (page: string) => { if (location.pathname !== page) history.pushState(null, '', page); setCurrentPage(page); };
+
+  const fetchKycStatus = async () => {
+    try {
+      const res = await apiFetch('/kyc/status');
+      if (res.ok) {
+        const data = await res.json();
+        setKycData(data);
+      }
+    } catch {}
+  };
 
   const refreshAllData = async () => {
     const [txRes, summaryRes, anomaliesRes, subsRes, goalsRes] = await Promise.all([
@@ -115,6 +143,8 @@ export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const projected = Number(item.predicted_total_expense || 0);
       return { date: `${item.period_days} Days Forecast`, projected, confidenceMin: projected * .85, confidenceMax: projected * 1.15 };
     }));
+
+    await fetchKycStatus();
   };
 
   useEffect(() => {
@@ -123,7 +153,18 @@ export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const res = await apiFetch('/auth/me');
         if (!res.ok) throw new Error('Unauthorized');
-        const data = await res.json(); setUser({ name: data.name, email: data.email }); await refreshAllData();
+        const data = await res.json();
+        setUser({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          monthly_income: data.monthly_income,
+          currency: data.currency,
+          kyc_status: data.kyc_status,
+          digilocker_verified: data.digilocker_verified,
+          pan_verified: data.pan_verified,
+        });
+        await refreshAllData();
       } catch { clearToken(); setUser(null); setPage('/login'); }
       finally { setIsLoading(false); }
     })();
@@ -133,14 +174,109 @@ export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLoading(true);
     try {
       const res = await apiFetch(path, { method: 'POST', body: JSON.stringify(body) });
-      if (!res.ok) return false;
-      const data = await res.json(); setToken(data.access_token); setUser({ name: data.name, email: data.email });
-      await refreshAllData(); setPage('/'); return true;
-    } finally { setIsLoading(false); }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false, error: data.detail || 'Authentication failed. Please check your credentials.' };
+      }
+      setToken(data.access_token);
+      setUser({
+        name: data.name,
+        email: data.email,
+        kyc_status: 'pending',
+        digilocker_verified: false,
+        pan_verified: false,
+      });
+      await refreshAllData();
+      setPage('/');
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error connecting to backend service.' };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const login = (email: string, password: string) => authenticate('/auth/login', { email, password });
-  const register = (name: string, email: string, password: string) => authenticate('/auth/register', { name, email, password });
+  const login = async (email: string, password: string) => {
+    const res = await authenticate('/auth/login', { email, password });
+    return res;
+  };
+
+  const register = async (name: string, email: string, password: string, monthlyIncome: number = 0) => {
+    const res = await authenticate('/auth/register', {
+      name,
+      email,
+      password,
+      monthly_income: monthlyIncome,
+    });
+    if (res.success) {
+      // Auto-open KYC modal for newly registered users
+      setIsKycModalOpen(true);
+    }
+    return res;
+  };
+
+  const verifyPan = async (panNumber: string) => {
+    try {
+      const res = await apiFetch('/kyc/pan/verify', {
+        method: 'POST',
+        body: JSON.stringify({ pan_number: panNumber }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.detail || 'Failed to verify PAN' };
+      }
+      await fetchKycStatus();
+      if (user) {
+        setUser({ ...user, pan_verified: true, kyc_status: data.kyc_status });
+      }
+      return { success: true, message: data.message };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error verifying PAN' };
+    }
+  };
+
+  const initiateDigiLocker = async (aadhaarNumber: string) => {
+    try {
+      const res = await apiFetch('/kyc/digilocker/initiate', {
+        method: 'POST',
+        body: JSON.stringify({ aadhaar_number: aadhaarNumber }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.detail || 'Failed to initiate DigiLocker session' };
+      }
+      return {
+        success: true,
+        session_id: data.session_id,
+        masked_aadhaar: data.masked_aadhaar,
+        message: data.message,
+        sandbox_hint: data.sandbox_hint,
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error initiating DigiLocker' };
+    }
+  };
+
+  const verifyDigiLockerOtp = async (sessionId: string, otp: string) => {
+    try {
+      const res = await apiFetch('/kyc/digilocker/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ session_id: sessionId, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.detail || 'Invalid DigiLocker OTP' };
+      }
+      await fetchKycStatus();
+      if (user) {
+        setUser({ ...user, kyc_status: 'verified', digilocker_verified: true });
+      }
+      return { success: true, message: data.message };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error verifying DigiLocker OTP' };
+    }
+  };
+
   const logout = async () => { clearToken(); setUser(null); setTransactions([]); setPage('/login'); };
 
   const addTransaction = async (tx: any) => {
@@ -157,6 +293,22 @@ export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const values = line.split(',').map(x => x.trim().replace(/^"|"$/g, '')); const row = Object.fromEntries(headers.map((h, i) => [h, values[i]]));
       return { id: `preview-${index}`, date: row.date, description: row.description || row.merchant || 'Imported transaction', amount: Number(row.amount), category: category(row.category), status: 'AI-assigned', isAnomaly: false, balanceAfter: 0 } as Transaction;
     }).filter(tx => tx.date && Number.isFinite(tx.amount));
+  };
+  const uploadPDF = async (file: File, password?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (password) {
+      formData.append('password', password);
+    }
+    const res = await apiFetch('/transactions/upload-pdf', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.detail || 'Failed to extract transactions from PDF statement.');
+    }
+    return data;
   };
   const commitCSV = async (txs: Transaction[]) => {
     for (const tx of txs) await addTransaction(tx);
@@ -176,11 +328,67 @@ export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setChatHistory(items => [...items, userMessage]);
     try {
       const res = await apiFetch('/chat', { method: 'POST', body: JSON.stringify({ message: text, session_id: sessionId }) });
-      if (!res.ok) throw new Error('Chat request failed'); const data = await res.json(); setSessionId(data.session_id);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server error (${res.status})`);
+      }
+      const data = await res.json();
+      setSessionId(data.session_id);
       setChatHistory(items => [...items, { id: `agent-${Date.now()}`, sender: 'agent', text: data.response, timestamp: new Date().toISOString(), toolCalls: data.tool_calls_made }]);
-    } finally { setIsChatLoading(false); }
+    } catch (err: any) {
+      setChatHistory(items => [...items, {
+        id: `agent-${Date.now()}`,
+        sender: 'agent',
+        text: `⚠️ **Agent notice**: ${err.message || 'Could not reach backend service.'}\n\nPlease verify that the backend is active or check your LLM configuration.`,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsChatLoading(false);
+    }
   };
   const getWeeklyDigest = async () => { const res = await apiFetch('/chat/digest'); return res.ok ? (await res.json()).digest : 'Digest unavailable.'; };
 
-  return <FinContext.Provider value={{ user, transactions, goals, subscriptions, chatHistory, summary, forecast, activeAnomalies, currentPage, isLoading, isChatLoading, theme, setPage, login, register, logout, addTransaction, correctCategory, uploadCSV, commitCSV, createGoal, contributeToGoal, sendChatMessage, getWeeklyDigest, refreshAllData, toggleTheme: () => setTheme(value => value === 'dark' ? 'light' : 'dark') }}>{children}</FinContext.Provider>;
+  return (
+    <FinContext.Provider
+      value={{
+        user,
+        kycData,
+        isKycModalOpen,
+        setIsKycModalOpen,
+        transactions,
+        goals,
+        subscriptions,
+        chatHistory,
+        summary,
+        forecast,
+        activeAnomalies,
+        currentPage,
+        isLoading,
+        isChatLoading,
+        theme,
+        setPage,
+        login,
+        register,
+        logout,
+        addTransaction,
+        correctCategory,
+        uploadCSV,
+        uploadPDF,
+        commitCSV,
+        createGoal,
+        contributeToGoal,
+        sendChatMessage,
+        getWeeklyDigest,
+        fetchKycStatus,
+        verifyPan,
+        initiateDigiLocker,
+        verifyDigiLockerOtp,
+        refreshAllData,
+        toggleTheme: () => setTheme(value => value === 'dark' ? 'light' : 'dark'),
+      }}
+    >
+      {children}
+    </FinContext.Provider>
+  );
 };
+

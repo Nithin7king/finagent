@@ -105,8 +105,8 @@ def run_react_frontend():
 
 if __name__ == "__main__":
     # Command line args inspection
-    use_kotlin_gateway = "--gateway=express" not in sys.argv
-    use_flutter_frontend = "--frontend=react" not in sys.argv
+    use_kotlin_gateway = "--gateway=kotlin" in sys.argv
+    use_flutter_frontend = "--frontend=flutter" in sys.argv
 
     # Seed database if not done yet
     if not Path(".db_seeded").exists():
@@ -125,12 +125,12 @@ if __name__ == "__main__":
     backend_thread = threading.Thread(target=run_backend, daemon=True)
     backend_thread.start()
 
-    # Start gateway
+    # Start gateway (Express default)
     gateway_target = run_kotlin_gateway if use_kotlin_gateway else run_express_gateway
     gateway_thread = threading.Thread(target=gateway_target, daemon=True)
     gateway_thread.start()
 
-    # Start frontend
+    # Start frontend (React default, Flutter disabled unless --frontend=flutter is set)
     if use_flutter_frontend and (shutil.which("flutter") or shutil.which("flutter.bat")):
         run_flutter_frontend()
     else:

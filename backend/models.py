@@ -39,6 +39,15 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
 
+    # KYC & DigiLocker Verification
+    pan_number = Column(String, nullable=True)
+    pan_verified = Column(Boolean, default=False)
+    aadhaar_last4 = Column(String, nullable=True)
+    digilocker_id = Column(String, nullable=True)
+    digilocker_verified = Column(Boolean, default=False)
+    kyc_status = Column(String, default="pending")  # pending | pan_verified | verified
+    kyc_completed_at = Column(DateTime, nullable=True)
+
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
     goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
     alerts = relationship("Alert", back_populates="user", cascade="all, delete-orphan")

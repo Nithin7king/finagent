@@ -112,12 +112,13 @@ class SpendingForecaster:
             trend_per_day = coeffs[0]
         else:
             trend_per_day = 0
+            coeffs = np.array([0.0, float(recent_avg)])
 
         # Forecast: recent average + trend adjustment
         # Trend-adjusted daily spend for forecast period
         last_x = len(daily)
         forecast_days_x = np.arange(last_x, last_x + horizon_days)
-        trend_adjustment = np.polyval(coeffs if len(x) > 5 else [0, recent_avg], forecast_days_x)
+        trend_adjustment = np.polyval(coeffs, forecast_days_x)
         total_forecast = float(np.clip(trend_adjustment, 0, None).sum())
 
         # Blend: 70% trend-based, 30% rolling average

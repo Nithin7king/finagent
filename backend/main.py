@@ -8,22 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
-from backend.database import get_db, init_db
-from backend.auth import register_user, login_user, get_current_user
-"""
-FinAgent — FastAPI Application Entry Point
-Wires up all routers, CORS, startup events, and auth endpoints.
-"""
-import os
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from dotenv import load_dotenv
-
-from backend.database import get_db, init_db
+from backend.database import get_db, init_db, get_db_status
 from backend.auth import register_user, login_user, get_current_user
 from backend import schemas, models
-from backend.routers import transactions, analytics, chat, goals, alerts, profile, recommendations
+from backend.routers import transactions, analytics, chat, goals, alerts, profile, recommendations, kyc
 from backend.rag.knowledge_loader import load_knowledge_base
 
 load_dotenv()
@@ -64,6 +52,8 @@ app.include_router(goals.router)
 app.include_router(alerts.router)
 app.include_router(profile.router)
 app.include_router(recommendations.router)
+app.include_router(kyc.router)
+
 
 
 # ─── Auth Endpoints ───────────────────────────────────────────────────────────
@@ -118,10 +108,13 @@ def shutdown():
 # ─── Health Check ─────────────────────────────────────────────────────────────
 @app.get("/health", tags=["system"])
 def health():
+    db_status = get_db_status()
+    is_healthy = db_status.get("connected", False)
     return {
-        "status": "healthy",
+        "status": "healthy" if is_healthy else "degraded",
         "service": "FinAgent API",
         "version": "1.0.0",
+        "database": db_status,
     }
 
 

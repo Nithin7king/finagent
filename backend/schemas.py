@@ -34,9 +34,38 @@ class UserOut(BaseModel):
     monthly_income: float
     currency: str
     created_at: datetime
+    pan_number: Optional[str] = None
+    pan_verified: bool = False
+    aadhaar_last4: Optional[str] = None
+    digilocker_verified: bool = False
+    kyc_status: str = "pending"
+    kyc_completed_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+
+# ─── KYC & DigiLocker ────────────────────────────────────────────────────────
+
+class PanVerifyRequest(BaseModel):
+    pan_number: str
+
+class DigiLockerInitiateRequest(BaseModel):
+    aadhaar_number: str
+
+class DigiLockerVerifyOtpRequest(BaseModel):
+    session_id: str
+    otp: str
+
+class KycStatusResponse(BaseModel):
+    kyc_status: str
+    pan_number: Optional[str] = None
+    pan_verified: bool = False
+    aadhaar_masked: Optional[str] = None
+    digilocker_verified: bool = False
+    monthly_income: float = 0.0
+    kyc_completed_at: Optional[datetime] = None
+
 
 
 # ─── Transactions ─────────────────────────────────────────────────────────────

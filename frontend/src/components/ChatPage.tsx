@@ -14,9 +14,10 @@ export const ChatPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestedChips = [
-    { text: 'Explain my tax-saving options.', icon: BookOpen },
-    { text: 'Am I on track for my goals?', icon: Sparkles },
-    { text: 'Auditing swiggy & billing anomalies', icon: AlertCircle },
+    { text: 'How much did I spend on food this month?', icon: Sparkles },
+    { text: 'What active subscriptions am I paying for?', icon: AlertCircle },
+    { text: 'How can I save ₹5,000 next month?', icon: BookOpen },
+    { text: 'Give me a summary of my recent expenses', icon: MessageSquare },
   ];
 
   // Auto scroll to bottom
@@ -44,37 +45,35 @@ export const ChatPage: React.FC = () => {
 
   const triggerDigestAsMessage = async () => {
     if (isChatLoading) return;
-    // Call digest endpoint and display as an agent answer
     const digestText = await getWeeklyDigest();
-    // Simulate sending it to chat
-    await sendChatMessage(`Autonomous Ledger Audit: Generate Weekly Digest`);
+    await sendChatMessage(`Please summarize my weekly financial health and spending highlights.`);
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col justify-between border border-gold/10 bg-ink-raised rounded-sm overflow-hidden shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+    <div className="h-[calc(100vh-140px)] flex flex-col justify-between border border-white/10 bg-ink-raised rounded-2xl overflow-hidden shadow-2xl animate-[fadeIn_0.2s_ease-out]">
       
       {/* Chat header panel */}
-      <div className="px-6 py-4.5 bg-ink border-b border-gold/10 flex items-center justify-between">
+      <div className="px-6 py-4 bg-ink/70 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gold/5 border border-gold/20 flex items-center justify-center rounded-sm text-gold">
-            <MessageSquare className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <Sparkles className="w-4.5 h-4.5" />
           </div>
           <div>
-            <h3 className="font-display text-sm font-medium text-white">Autonomous Financial Agent</h3>
-            <div className="text-[9px] font-mono text-sage font-semibold uppercase tracking-wider flex items-center space-x-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-sage inline-block animate-pulse" />
-              <span>Grounded in passbook ledger (Real-Time RAG)</span>
+            <h3 className="text-sm font-semibold text-white">AI Financial Assistant</h3>
+            <div className="text-xs text-emerald-400 font-medium flex items-center space-x-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+              <span>Connected to your verified transactions</span>
             </div>
           </div>
         </div>
 
-        {/* Action button to trigger Autonomous digest */}
+        {/* Action button to trigger digest */}
         <button
           onClick={triggerDigestAsMessage}
           disabled={isChatLoading}
-          className="text-[10px] font-mono border border-gold/15 hover:border-gold/50 text-gold bg-gold/5 hover:bg-gold/10 py-1.5 px-3.5 rounded-sm transition-all cursor-pointer font-bold select-none uppercase tracking-wide"
+          className="text-xs border border-white/10 hover:border-blue-500/40 text-mist hover:text-white bg-ink/50 hover:bg-ink py-1.5 px-3.5 rounded-xl transition-all cursor-pointer font-medium"
         >
-          Dispatch Weekly Digest
+          Weekly Summary
         </button>
       </div>
 
@@ -84,19 +83,19 @@ export const ChatPage: React.FC = () => {
           <ChatBubble key={msg.id} message={msg} />
         ))}
 
-        {/* AI thinking state representation */}
+        {/* AI thinking state */}
         {isChatLoading && (
-          <div className="flex justify-start mb-5 animate-pulse">
-            <div className="flex items-start space-x-3">
-              <div className="w-7 h-7 bg-gold/10 border border-gold/30 flex items-center justify-center rounded-sm shrink-0">
-                <Sparkles className="w-4 h-4 text-gold animate-spin" />
+          <div className="flex justify-start mb-4">
+            <div className="flex items-start space-x-2.5">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                <Sparkles className="w-4 h-4 animate-spin" />
               </div>
-              <div className="p-4 bg-ink border border-gold/5 rounded-sm flex items-center space-x-2">
-                <span className="text-xs font-mono text-gold/80 italic">MYFY.AI is auditing ledger parameters</span>
+              <div className="py-2.5 px-4 bg-ink border border-white/10 rounded-2xl rounded-tl-sm flex items-center space-x-2">
+                <span className="text-xs text-mist">Reviewing your transactions</span>
                 <div className="flex items-center space-x-1 pl-1">
-                  <span className="w-1.5 h-1.5 bg-gold rounded-full animate-[bounce_1s_infinite_100ms]" />
-                  <span className="w-1.5 h-1.5 bg-gold rounded-full animate-[bounce_1s_infinite_200ms]" />
-                  <span className="w-1.5 h-1.5 bg-gold rounded-full animate-[bounce_1s_infinite_300ms]" />
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:300ms]" />
                 </div>
               </div>
             </div>
@@ -106,20 +105,20 @@ export const ChatPage: React.FC = () => {
       </div>
 
       {/* Bottom controls & input tray */}
-      <div className="p-4 bg-ink border-t border-gold/10 space-y-4 shrink-0">
+      <div className="p-4 bg-ink/70 border-t border-white/10 space-y-3 shrink-0">
         
         {/* Suggested chips above input */}
-        {chatHistory.length <= 1 && !isChatLoading && (
-          <div className="flex flex-wrap gap-2.5">
+        {chatHistory.length <= 2 && !isChatLoading && (
+          <div className="flex flex-wrap gap-2">
             {suggestedChips.map((chip, idx) => {
               const Icon = chip.icon;
               return (
                 <button
                   key={idx}
                   onClick={() => handleChipClick(chip.text)}
-                  className="px-3.5 py-1.5 bg-ink-raised border border-gold/15 hover:border-gold/50 text-mist hover:text-gold text-[10px] font-mono flex items-center space-x-2 transition-all rounded-sm cursor-pointer"
+                  className="px-3 py-1.5 bg-ink hover:bg-ink-tertiary border border-white/10 hover:border-blue-500/40 text-mist hover:text-white text-xs rounded-xl flex items-center space-x-2 transition-all cursor-pointer"
                 >
-                  <Icon className="w-3.5 h-3.5 text-gold/60" />
+                  <Icon className="w-3.5 h-3.5 text-blue-400" />
                   <span>{chip.text}</span>
                 </button>
               );
@@ -128,25 +127,25 @@ export const ChatPage: React.FC = () => {
         )}
 
         {/* Input Form */}
-        <form onSubmit={handleSend} className="flex items-center gap-3">
+        <form onSubmit={handleSend} className="flex items-center gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Query tax exemptions, forecast summaries, subscription dispute logs..."
+            placeholder="Ask anything about your expenses, bank statements, savings, or bills..."
             disabled={isChatLoading}
-            className="flex-1 bg-ink-raised border border-gold/15 text-white py-3 px-4 text-xs font-mono rounded-sm focus:border-gold focus:ring-1 focus:ring-gold placeholder:text-mist/35 outline-none"
+            className="flex-1 bg-ink border border-white/10 text-white py-2.5 px-4 text-sm rounded-xl focus:outline-none focus:border-blue-500 placeholder:text-mist/60"
           />
           <button
             type="submit"
             disabled={!input.trim() || isChatLoading}
-            className={`p-3 rounded-sm flex items-center justify-center transition-all cursor-pointer ${
+            className={`p-2.5 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
               input.trim() && !isChatLoading
-                ? 'bg-gold text-ink font-bold hover:brightness-110'
-                : 'bg-gold/10 border border-gold/10 text-mist/30 cursor-not-allowed'
+                ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/25'
+                : 'bg-white/5 text-mist/40 cursor-not-allowed'
             }`}
           >
-            <Send className="w-4.5 h-4.5" />
+            <Send className="w-4 h-4" />
           </button>
         </form>
       </div>

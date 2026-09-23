@@ -18,16 +18,25 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
+// Test PostgreSQL connectivity on startup
+pool.query('SELECT current_database(), current_user')
+  .then(res => {
+    const db = res.rows[0].current_database;
+    const user = res.rows[0].current_user;
+    console.log(`[Express Gateway] [SUCCESS] PostgreSQL connected! (DB: "${db}", User: "${user}")`);
+  })
+  .catch(err => {
+    console.warn(`[Express Gateway] [WARNING] PostgreSQL connection failed: ${err.message}. Native auth will fallback to FastAPI proxy.`);
+  });
+
+
 app.use(cors({
   origin: ['http://localhost:8501', 'http://127.0.0.1:8501'],
   credentials: true
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 // ─── Proactive Notification delivery webhook ──────────────────────────────────
-app.post('/notifications/deliver', (req, res) => {
+app.post('/notifications/deliver', express.json(), (req, res) => {
   const { user_id, title, message, content } = req.body;
   console.log('\n=========================================');
   console.log(`🚀 [NOTIFICATION DELIVERY SYSTEM]`);
@@ -52,7 +61,7 @@ function createToken(userId, email) {
 // ─── User Authentication Operations (Express native) ─────────────────────────
 
 // POST /api/auth/register
-app.post('/api/auth/register', async (req, res, next) => {
+app.post('/api/auth/register', express.json(), async (req, res, next) => {
   const { email, name, password, monthly_income, currency } = req.body;
   
   if (!email || !name || !password) {
@@ -72,7 +81,7 @@ app.post('/api/auth/register', async (req, res, next) => {
         email.toLowerCase(),
         name,
         hashedPassword,
-        monthly_income || 0.0,
+        parseFloat(monthly_income) || 0.0,
         currency || 'INR',
         new Date(),
         true
@@ -95,7 +104,7 @@ app.post('/api/auth/register', async (req, res, next) => {
 });
 
 // POST /api/auth/login
-app.post('/api/auth/login', async (req, res, next) => {
+app.post('/api/auth/login', express.json(), async (req, res, next) => {
   const { email, password } = req.body;
   
   if (!email || !password) {
@@ -150,12 +159,19 @@ app.use('/api', (req, res, next) => {
     return res.status(401).json({ detail: 'Invalid or expired authentication token.' });
   }
 }, proxy(FASTAPI_URL, {
+  parseReqBody: false,
   proxyReqOptDecorator: function(proxyReqOpts, srcReq) {
     // Inject X-User-Id header to backend request if available
     if (srcReq.userId) {
       proxyReqOpts.headers['x-user-id'] = srcReq.userId;
     }
     return proxyReqOpts;
+  },
+  proxyReqBodyDecorator: function(bodyContent, srcReq) {
+    if (srcReq.body && Object.keys(srcReq.body).length > 0) {
+      return JSON.stringify(srcReq.body);
+    }
+    return bodyContent;
   },
   proxyReqPathResolver: function(req) {
     // Forward /api/xyz as /xyz in FastAPI
