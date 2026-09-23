@@ -1,6 +1,0 @@
-{
-  "name": "FinAgent",
-  "description": "AI-powered personal finance assistant grounded in an Indian banking passbook ledger.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

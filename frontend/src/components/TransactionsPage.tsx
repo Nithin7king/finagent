@@ -9,13 +9,13 @@ import { Ledger } from './Ledger';
 export const TransactionsPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-[fadeIn_0.2s_ease-out]">
-      <div className="border-b border-gold/10 pb-5">
-        <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-gold font-bold">
-          CONSOLIDATED SAVINGS LEDGER
-        </div>
-        <h2 className="text-3.5xl font-display font-medium text-white tracking-tight italic mt-1">
-          Historical Passbook
-        </h2>
+      <div className="pb-1">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          Transactions & Statements
+        </h1>
+        <p className="text-xs sm:text-sm text-mist mt-0.5">
+          View all account debits and credits, search merchants, or upload your bank statement (PDF or CSV).
+        </p>
       </div>
 
       {/* The main Ledger element */}

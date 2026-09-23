@@ -6,7 +6,7 @@ import csv
 import io
 from datetime import datetime, timedelta
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, Form
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
@@ -255,6 +255,116 @@ async def upload_csv(
         "errors": len(errors),
         "error_details": errors[:10],  # Show first 10 errors
         "message": f"Successfully imported {len(created)} transactions.",
+    }
+
+
+@router.post("/upload-pdf")
+async def upload_pdf(
+    file: UploadFile = File(...),
+    password: Optional[str] = Form(None),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Upload an Indian bank statement PDF (SBI, HDFC, ICICI, Axis, Kotak, etc.).
+    Extracts transactions across 3 tiers (direct table -> LLM -> OCR),
+    with transparent password decryption for protected statements.
+    """
+    if not (file.filename.lower().endswith(".pdf") or file.content_type == "application/pdf"):
+        raise HTTPException(status_code=400, detail="File must be a PDF bank statement")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded PDF file is empty")
+
+    from backend.pdf_statement_parser import parse_statement_pdf
+    from backend.rag.engine import _call_llm
+
+    result = parse_statement_pdf(
+        content,
+        password=password,
+        llm_generate_fn=lambda prompt, **kw: _call_llm(prompt)
+    )
+
+    if result.get("requires_password"):
+        return {
+            "requires_password": True,
+            "tier_used": None,
+            "message": "This bank statement is password-protected. Please enter your PDF password.",
+            "transactions": [],
+            "warnings": result.get("warnings", []),
+        }
+
+    raw_txns = result.get("transactions", [])
+    if not raw_txns:
+        warnings_msg = " ".join(result.get("warnings", []))
+        raise HTTPException(
+            status_code=422,
+            detail=f"No transactions could be extracted from this PDF. {warnings_msg}"
+        )
+
+    categorizer = get_categorizer()
+    detector = get_detector()
+    preview_txns = []
+
+    for idx, tx in enumerate(raw_txns):
+        debit = tx.get("debit")
+        credit = tx.get("credit")
+        if debit is not None and debit > 0:
+            amount = -abs(float(debit))
+        elif credit is not None and credit > 0:
+            amount = abs(float(credit))
+        else:
+            amount = 0.0
+
+        desc = str(tx.get("description") or "Bank Transaction").strip()
+        date_raw = str(tx.get("date") or "").strip()
+
+        # Normalize date to YYYY-MM-DD
+        formatted_date = datetime.now().strftime("%Y-%m-%d")
+        for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%d.%m.%Y", "%d %b %Y", "%d-%b-%Y"):
+            try:
+                formatted_date = datetime.strptime(date_raw, fmt).strftime("%Y-%m-%d")
+                break
+            except ValueError:
+                continue
+
+        # ML categorization
+        ml_cat, ml_conf = categorizer.predict(desc, amount)
+
+        # Anomaly scoring
+        is_anomaly = False
+        anomaly_score = 0.0
+        if detector.model is not None and amount < 0:
+            try:
+                parsed_dt = datetime.strptime(formatted_date, "%Y-%m-%d")
+                score, severity, explanation = detector.score_transaction(
+                    amount=amount, date=parsed_dt, category=ml_cat, description=desc
+                )
+                is_anomaly = severity in ("medium", "high")
+                anomaly_score = score
+            except Exception:
+                pass
+
+        preview_txns.append({
+            "id": f"pdf-{idx}-{int(datetime.now().timestamp())}",
+            "date": formatted_date,
+            "description": desc,
+            "amount": amount,
+            "category": ml_cat or "Other",
+            "status": "AI-assigned",
+            "isAnomaly": is_anomaly,
+            "anomalyScore": anomaly_score,
+            "balanceAfter": tx.get("balance") or 0.0,
+            "source": "pdf",
+        })
+
+    return {
+        "requires_password": False,
+        "tier_used": result.get("tier_used"),
+        "tier_name": result.get("tier_name"),
+        "warnings": result.get("warnings", []),
+        "transactions": preview_txns,
+        "count": len(preview_txns),
     }
 
 

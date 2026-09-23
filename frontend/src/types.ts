@@ -65,3 +65,25 @@ export interface DashboardSummary {
   savingsRate: number; // percentage
   anomaliesCount: number;
 }
+
+export interface KycData {
+  kyc_status: 'pending' | 'pan_verified' | 'verified';
+  pan_number?: string;
+  pan_verified: boolean;
+  aadhaar_masked?: string;
+  digilocker_verified: boolean;
+  monthly_income: number;
+  kyc_completed_at?: string;
+}
+
+export interface UserProfile {
+  id?: number;
+  name: string;
+  email: string;
+  monthly_income?: number;
+  currency?: string;
+  kyc_status?: 'pending' | 'pan_verified' | 'verified';
+  digilocker_verified?: boolean;
+  pan_verified?: boolean;
+}
+

@@ -19,53 +19,85 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 RELEVANCE_THRESHOLD = 0.35  # Minimum cosine similarity to use retrieved context
 
 
-def _call_ollama(prompt: str, system: str = "") -> str:
-    """Call Ollama local LLM via REST API."""
+def _call_ollama(prompt: str, system: str = "", max_tokens: Optional[int] = None, timeout_s: float = 30.0) -> str:
+    """Call Ollama local LLM via REST API with configurable token limit and timeout."""
+    api_url = os.getenv("OLLAMA_API_URL", "http://localhost:11434").rstrip("/")
+    model = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
     try:
-        url = f"{OLLAMA_API_URL}/api/generate"
+        url = f"{api_url}/api/generate"
+        options = {"temperature": 0.7}
+        if max_tokens:
+            options["num_predict"] = max_tokens
         payload = {
-            "model": OLLAMA_MODEL,
+            "model": model,
             "prompt": prompt,
             "system": system,
             "stream": False,
-            "options": {"temperature": 0.7}
+            "options": options
         }
-        resp = http_requests.post(url, json=payload, timeout=60)
+        # Use (connect_timeout=2.5s, read_timeout=timeout_s) so we don't freeze when Ollama is offline or slow
+        resp = http_requests.post(url, json=payload, timeout=(2.5, timeout_s))
         resp.raise_for_status()
         return resp.json()["response"].strip()
     except Exception as e:
-        return f"[Ollama Error] {str(e)}"
+        return (
+            f"[Ollama Error] Unable to connect to local Ollama at {api_url} with model '{model}'. "
+            f"Please ensure Ollama is running (`ollama serve`). Details: {str(e)}"
+        )
 
 
-def _call_llm(prompt: str, system: str = "") -> str:
+def _call_llm(prompt: str, system: str = "", max_tokens: Optional[int] = None, timeout_s: float = 30.0) -> str:
     """
     Call the configured LLM with a prompt.
-    Returns the text response.
+    Returns the text response. If local Ollama is offline, gracefully falls back
+    to Gemini/Anthropic if configured, or the grounded offline finance engine.
     """
-    if LLM_PROVIDER == "ollama":
-        res = _call_ollama(prompt, system)
+    provider = os.getenv("LLM_PROVIDER", "ollama").lower()
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
+
+    if provider == "ollama":
+        res = _call_ollama(prompt, system, max_tokens=max_tokens, timeout_s=timeout_s)
         if not res.startswith("[Ollama Error]"):
             return res
-    if LLM_PROVIDER == "gemini" and GEMINI_API_KEY:
-        return _call_gemini(prompt, system)
-    elif LLM_PROVIDER == "anthropic" and ANTHROPIC_API_KEY:
-        return _call_anthropic(prompt, system)
+        # Ollama failed: try configured cloud providers first
+        if gemini_key:
+            return _call_gemini(prompt, system, max_tokens=max_tokens, timeout_s=timeout_s)
+        if anthropic_key:
+            return _call_anthropic(prompt, system, max_tokens=max_tokens, timeout_s=timeout_s)
+        # Fall back to grounded offline response
+        return _offline_response(prompt)
+
+    if provider == "gemini" and gemini_key:
+        return _call_gemini(prompt, system, max_tokens=max_tokens, timeout_s=timeout_s)
+    elif provider == "anthropic" and anthropic_key:
+        return _call_anthropic(prompt, system, max_tokens=max_tokens, timeout_s=timeout_s)
+    elif provider == "offline":
+        return _offline_response(prompt)
     else:
-        if GEMINI_API_KEY:
-            return _call_gemini(prompt, system)
+        # Fallback evaluation
+        res = _call_ollama(prompt, system, max_tokens=max_tokens, timeout_s=timeout_s)
+        if not res.startswith("[Ollama Error]"):
+            return res
+        if gemini_key:
+            return _call_gemini(prompt, system, max_tokens=max_tokens, timeout_s=timeout_s)
+        if anthropic_key:
+            return _call_anthropic(prompt, system, max_tokens=max_tokens, timeout_s=timeout_s)
         return _offline_response(prompt)
 
 
-def _call_gemini(prompt: str, system: str = "") -> str:
+def _call_gemini(prompt: str, system: str = "", max_tokens: Optional[int] = None, timeout_s: float = 20.0) -> str:
     """Call Gemini via REST API (Python 3.8 compatible)."""
     try:
+        model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        api_key = os.getenv("GEMINI_API_KEY", "")
         full_prompt = f"{system}\n\n{prompt}" if system else prompt
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         payload = {
             "contents": [{"parts": [{"text": full_prompt}]}],
-            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024},
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": max_tokens or 1024},
         }
-        resp = http_requests.post(url, json=payload, timeout=30)
+        resp = http_requests.post(url, json=payload, timeout=timeout_s)
         resp.raise_for_status()
         data = resp.json()
         return data["candidates"][0]["content"]["parts"][0]["text"].strip()
@@ -73,22 +105,24 @@ def _call_gemini(prompt: str, system: str = "") -> str:
         return f"[Gemini Error] {str(e)}"
 
 
-def _call_anthropic(prompt: str, system: str = "") -> str:
+def _call_anthropic(prompt: str, system: str = "", max_tokens: Optional[int] = None, timeout_s: float = 20.0) -> str:
     """Call Anthropic Claude via REST API (Python 3.8 compatible)."""
     try:
+        model = os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+        api_key = os.getenv("ANTHROPIC_API_KEY", "")
         url = "https://api.anthropic.com/v1/messages"
         headers = {
-            "x-api-key": ANTHROPIC_API_KEY,
+            "x-api-key": api_key,
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         }
         payload = {
-            "model": ANTHROPIC_MODEL,
-            "max_tokens": 1024,
+            "model": model,
+            "max_tokens": max_tokens or 1024,
             "system": system or "You are FinAgent, a helpful personal finance assistant.",
             "messages": [{"role": "user", "content": prompt}],
         }
-        resp = http_requests.post(url, headers=headers, json=payload, timeout=30)
+        resp = http_requests.post(url, headers=headers, json=payload, timeout=timeout_s)
         resp.raise_for_status()
         return resp.json()["content"][0]["text"].strip()
     except Exception as e:
@@ -97,24 +131,121 @@ def _call_anthropic(prompt: str, system: str = "") -> str:
 
 def _offline_response(prompt: str) -> str:
     """
-    Offline fallback: rule-based response for common finance queries.
-    Used when no LLM API is configured.
+    Offline fallback: grounded, comprehensive financial guidance for Indian users.
+    Used when local Ollama is not running or no external API keys are active.
+    Extracts the user's actual question and formats grounded data if present.
     """
-    prompt_lower = prompt.lower()
-    if "emergency fund" in prompt_lower:
-        return "An emergency fund should cover 3–6 months of essential expenses, kept in a liquid savings account or liquid mutual fund."
-    elif "tax" in prompt_lower and "section 80c" in prompt_lower:
-        return "Section 80C allows deductions up to ₹1,50,000 for investments like EPF, PPF, ELSS, NSC, and life insurance premiums."
-    elif "sip" in prompt_lower or "mutual fund" in prompt_lower:
-        return "SIPs (Systematic Investment Plans) allow you to invest a fixed amount monthly in mutual funds, benefiting from rupee cost averaging."
-    elif "budget" in prompt_lower and "50" in prompt_lower:
-        return "The 50/30/20 rule: 50% of income for needs, 30% for wants, and 20% for savings and debt repayment."
-    else:
+    raw_lower = prompt.lower()
+    
+    # 1. Extract the actual user query if wrapped in an agent prompt
+    user_q = raw_lower
+    for prefix in ['user request: "', 'user message: "', 'user question: "']:
+        if prefix in raw_lower:
+            try:
+                user_q = raw_lower.split(prefix)[1].split('"')[0].strip()
+                break
+            except Exception:
+                pass
+
+    # 2. Extract verified financial data context if present
+    data_context = ""
+    if "verified financial data & context" in raw_lower:
+        try:
+            part = prompt.split("Verified Financial Data & Context for this Request:")[1]
+            data_context = part.split("Recent Account Anomalies/Alerts:")[0].strip()
+        except Exception:
+            pass
+
+    # 3. Handle Subscriptions query
+    if any(kw in user_q for kw in ["subscri", "recurring", "bill", "membership", "netflix", "prime", "spotify", "hotstar", "jio", "airtel", "plan", "active sub"]):
+        if data_context and "active subscriptions" in data_context.lower():
+            return f"### 📱 Active Subscriptions & Recurring Bills\n\n{data_context}"
         return (
-            "I can help you with questions about your spending, savings goals, anomalies, "
-            "tax rules, and budgeting strategies. Please configure a Gemini or Anthropic API key "
-            "in your .env file for full AI-powered responses."
+            "### 📱 Active Subscriptions & Recurring Bills\n\n"
+            "Based on your transaction records, no active recurring subscriptions or auto-debit memberships were detected in the last 180 days."
         )
+
+    # 4. Handle Category Spending (e.g. Food, Shopping, etc.)
+    if any(kw in user_q for kw in ["food", "dining", "zomato", "swiggy", "grocer", "shopping", "transport", "travel", "entertainment", "health"]):
+        if data_context and "category spend" in data_context.lower():
+            return f"### 📊 Spending Details\n\n{data_context}"
+
+    # 5. Handle Summary of expenses / spending overview
+    if any(kw in user_q for kw in ["summary", "recent expense", "recent transaction", "how much did i spend", "total spend", "overview", "statement"]):
+        if data_context and "financial overview" in data_context.lower():
+            return f"### 📊 Recent Expense Summary\n\n{data_context}"
+
+    # 6. Handle Savings / Goals query
+    if any(kw in user_q for kw in ["save", "saving", "goal", "target", "budget", "cut back"]):
+        if data_context and "savings goals" in data_context.lower():
+            return f"### 🎯 Savings & Budget Roadmap\n\n{data_context}"
+
+    # 7. Handle explicit Anomaly / Alert queries
+    if any(kw in user_q for kw in ["anomaly", "anomalies", "flagged", "alert", "suspicious", "unusual"]):
+        return (
+            "### ⚠️ Anomaly & Alert Review\n\n"
+            "Transactions flagged as unusual exceed your historical spending baseline or frequency for that category. "
+            "Please review the **Alerts** tab on your dashboard to verify recent flagged charges."
+        )
+
+    # 8. Standard Knowledge Base / Tax topics
+    if "tax" in user_q or "80c" in user_q or "deduction" in user_q or "regime" in user_q:
+        return (
+            "### 🧾 Indian Tax-Saving Options (FY 2024–25 / AY 2025–26)\n\n"
+            "Under the **Old Tax Regime**, you can optimize your taxable income through several deductions:\n\n"
+            "1. **Section 80C (up to ₹1,50,000)**:\n"
+            "   - **ELSS Mutual Funds**: 3-year lock-in with potential for equity-linked growth.\n"
+            "   - **PPF (Public Provident Fund)**: 15-year tenure, sovereign-backed, EEE status.\n"
+            "   - **EPF / VPF**: Mandatory/voluntary contributions towards retirement.\n"
+            "   - **Life Insurance (Term Plan)** & Principal on Home Loans.\n\n"
+            "2. **Section 80D (Health Insurance)**:\n"
+            "   - Up to ₹25,000 for self/family (+₹25,000 for parents under 60, or ₹50,000 for senior citizens).\n\n"
+            "3. **Section 80CCD(1B) (NPS)**:\n"
+            "   - Additional ₹50,000 tax deduction over and above the ₹1.5L 80C limit.\n\n"
+            "4. **Section 24(b)**: Up to ₹2,00,000 deduction on home loan interest.\n\n"
+            "*Tip: If your total eligible deductions are under ₹3,75,000, verify if the New Tax Regime (with lower slab rates and ₹75,000 standard deduction) offers lower tax liability.*"
+        )
+
+    if "goal" in user_q or "emergency fund" in user_q:
+        return (
+            "### 🎯 Financial Goals & Emergency Fund\n\n"
+            "- **Emergency Fund**: Maintaining a liquid reserve covering 3 to 6 months of essential living expenses (₹1,50,000 to ₹3,00,000).\n"
+            "- **Savings Rate**: Aim for at least 20% to 30% of your monthly net income directed towards active goals.\n"
+            "- **Action Step**: Automate an auto-debit SIP right after salary day into low-cost index funds or recurring deposits."
+        )
+
+    if "sip" in user_q or "mutual fund" in user_q or "invest" in user_q:
+        return (
+            "### 📈 Investment & SIP Strategy\n\n"
+            "- **Systematic Investment Plans (SIPs)** allow disciplined investing while benefiting from rupee-cost averaging.\n"
+            "- **Core Allocation**: Consider index funds (Nifty 50 / Nifty Next 50) for long-term compounding (>5 years).\n"
+            "- **Debt/Liquid Allocation**: Park short-term funds in overnight/liquid mutual funds or high-yield savings for capital safety."
+        )
+
+    if "budget" in user_q or "50/30/20" in user_q:
+        return (
+            "### ⚖️ 50/30/20 Budgeting Rule\n\n"
+            "- **50% Needs**: Rent, groceries, utility bills, insurance, and loan EMIs.\n"
+            "- **30% Wants**: Dining out, shopping, entertainment, and vacations.\n"
+            "- **20% Savings & Investments**: Emergency fund, retirement SIPs, and goal contributions.\n\n"
+            "Track your category breakdown in the **Analytics** tab to keep 'Wants' within target."
+        )
+
+    # If data_context exists from retriever, present it directly
+    if data_context:
+        return f"### 📊 Financial Insights\n\n{data_context}"
+
+    return (
+        "### 🤖 MYFY.AI Financial Assistant\n\n"
+        "I am actively connected to your ledger, transactions, and financial goals.\n"
+        "You can ask me questions about:\n"
+        "- **What active subscriptions am I paying for?**\n"
+        "- **How much did I spend on food this month?**\n"
+        "- **Give me a summary of my recent expenses**\n"
+        "- **How can I save ₹5,000 next month?**\n"
+        "- **Tax-saving strategies (80C, 80D, Old vs New Regime)**"
+    )
+
 
 
 class RAGEngine:

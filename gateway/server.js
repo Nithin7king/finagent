@@ -18,16 +18,25 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
+// Test PostgreSQL connectivity on startup
+pool.query('SELECT current_database(), current_user')
+  .then(res => {
+    const db = res.rows[0].current_database;
+    const user = res.rows[0].current_user;
+    console.log(`[Express Gateway] [SUCCESS] PostgreSQL connected! (DB: "${db}", User: "${user}")`);
+  })
+  .catch(err => {
+    console.warn(`[Express Gateway] [WARNING] PostgreSQL connection failed: ${err.message}. Native auth will fallback to FastAPI proxy.`);
+  });
+
+
 app.use(cors({
   origin: ['http://localhost:8501', 'http://127.0.0.1:8501'],
   credentials: true
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 // ─── Proactive Notification delivery webhook ──────────────────────────────────
-app.post('/notifications/deliver', (req, res) => {
+app.post('/notifications/deliver', express.json(), (req, res) => {
   const { user_id, title, message, content } = req.body;
   console.log('\n=========================================');
   console.log(`🚀 [NOTIFICATION DELIVERY SYSTEM]`);
@@ -52,7 +61,7 @@ function createToken(userId, email) {
 // ─── User Authentication Operations (Express native) ─────────────────────────
 
 // POST /api/auth/register
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', express.json(), async (req, res, next) => {
   const { email, name, password, monthly_income, currency } = req.body;
   
   if (!email || !name || !password) {
@@ -72,7 +81,7 @@ app.post('/api/auth/register', async (req, res) => {
         email.toLowerCase(),
         name,
         hashedPassword,
-        monthly_income || 0.0,
+        parseFloat(monthly_income) || 0.0,
         currency || 'INR',
         new Date(),
         true
@@ -89,13 +98,13 @@ app.post('/api/auth/register', async (req, res) => {
       email: user.email
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ detail: 'Server registration error.' });
+    console.error('Express DB registration error, falling back to FastAPI proxy:', error.message);
+    return next();
   }
 });
 
 // POST /api/auth/login
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', express.json(), async (req, res, next) => {
   const { email, password } = req.body;
   
   if (!email || !password) {
@@ -122,13 +131,19 @@ app.post('/api/auth/login', async (req, res) => {
       email: user.email
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ detail: 'Server login error.' });
+    console.error('Express DB login error, falling back to FastAPI proxy:', error.message);
+    return next();
   }
 });
 
 // ─── Reverse Proxy Gateway ────────────────────────────────────────────────────
 app.use('/api', (req, res, next) => {
+  // Allow preflight CORS requests and public endpoints through without mandatory token
+  const publicPaths = ['/auth/login', '/auth/register', '/health', '/docs', '/openapi.json'];
+  if (req.method === 'OPTIONS' || publicPaths.includes(req.path)) {
+    return next();
+  }
+
   // Validate Authorization header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -144,10 +159,19 @@ app.use('/api', (req, res, next) => {
     return res.status(401).json({ detail: 'Invalid or expired authentication token.' });
   }
 }, proxy(FASTAPI_URL, {
+  parseReqBody: false,
   proxyReqOptDecorator: function(proxyReqOpts, srcReq) {
-    // Inject X-User-Id header to backend request
-    proxyReqOpts.headers['x-user-id'] = srcReq.userId;
+    // Inject X-User-Id header to backend request if available
+    if (srcReq.userId) {
+      proxyReqOpts.headers['x-user-id'] = srcReq.userId;
+    }
     return proxyReqOpts;
+  },
+  proxyReqBodyDecorator: function(bodyContent, srcReq) {
+    if (srcReq.body && Object.keys(srcReq.body).length > 0) {
+      return JSON.stringify(srcReq.body);
+    }
+    return bodyContent;
   },
   proxyReqPathResolver: function(req) {
     // Forward /api/xyz as /xyz in FastAPI

@@ -24,7 +24,16 @@ def _get_user_transactions_df(db: Session, user_id: int, days: int = 90) -> pd.D
         .all()
     )
     if not txns:
-        return pd.DataFrame()
+        # Fallback to the latest available transactions for this user if cutoff returns nothing
+        txns = (
+            db.query(models.Transaction)
+            .filter(models.Transaction.user_id == user_id)
+            .order_by(models.Transaction.date.desc())
+            .limit(200)
+            .all()
+        )
+        if not txns:
+            return pd.DataFrame()
 
     return pd.DataFrame([{
         "id": t.id,
@@ -238,6 +247,56 @@ def search_knowledge(query: str, n_results: int = 3) -> Dict[str, Any]:
     }
 
 
+# ─── Tool 7: Get Subscriptions ───────────────────────────────────────────────
+
+def get_subscriptions(db: Session, user_id: int) -> Dict[str, Any]:
+    """
+    Retrieve recurring subscriptions, bills, and monthly recurring impact.
+    """
+    from backend.ml.subscription_detector import get_subscription_detector
+    df = _get_user_transactions_df(db, user_id, days=180)
+    if df.empty:
+        return {"subscriptions": [], "count": 0, "message": "No transactions available to detect subscriptions."}
+
+    detector = get_subscription_detector()
+    subs = detector.detect(df)
+
+    # Also check if any transactions are marked with is_subscription == True
+    explicit_subs = (
+        db.query(models.Transaction)
+        .filter(models.Transaction.user_id == user_id, models.Transaction.is_subscription == True)
+        .all()
+    )
+    seen_merchants = {s["merchant"].strip().lower() for s in subs}
+    for es in explicit_subs:
+        m_key = es.description.strip().lower()
+        if m_key not in seen_merchants:
+            seen_merchants.add(m_key)
+            interval = es.subscription_interval_days or 30
+            subs.append({
+                "merchant": es.description,
+                "category": es.category or "Utilities & Bills",
+                "amount": round(abs(es.amount), 2),
+                "interval_days": interval,
+                "monthly_cost": round(abs(es.amount) * (30 / interval), 2),
+                "occurrences": 1,
+                "last_charge": es.date,
+                "next_expected": es.date + timedelta(days=interval),
+                "confidence": "high",
+            })
+
+    user_obj = db.query(models.User).filter(models.User.id == user_id).first()
+    income = user_obj.monthly_income if user_obj and user_obj.monthly_income else 50000.0
+    creep = detector.subscription_creep_score(subs, income)
+
+    return {
+        "subscriptions": subs,
+        "count": len(subs),
+        "total_monthly": creep.get("total_monthly_subscriptions", sum(s["monthly_cost"] for s in subs)),
+        "creep_analysis": creep,
+    }
+
+
 # ─── Tool Registry ────────────────────────────────────────────────────────────
 
 TOOL_REGISTRY = {
@@ -245,6 +304,12 @@ TOOL_REGISTRY = {
         "fn": get_transactions,
         "description": "Get spending summary and transaction data for a given period",
         "params": ["days (int, default 30)", "category (str, optional)"],
+        "requires_db": True,
+    },
+    "get_subscriptions": {
+        "fn": get_subscriptions,
+        "description": "Get list of recurring subscriptions and auto-debit bills",
+        "params": [],
         "requires_db": True,
     },
     "get_anomalies": {
