@@ -28,21 +28,13 @@ app = FastAPI(
 # ─── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8501",
-        "http://127.0.0.1:8501",
-        "http://localhost:5000",
-        "http://127.0.0.1:5000",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-    ],
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origins=["*"],
+    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(transactions.router)

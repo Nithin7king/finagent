@@ -31,9 +31,10 @@ pool.query('SELECT current_database(), current_user')
 
 
 app.use(cors({
-  origin: ['http://localhost:8501', 'http://127.0.0.1:8501'],
+  origin: true,
   credentials: true
 }));
+
 
 // ─── Proactive Notification delivery webhook ──────────────────────────────────
 app.post('/notifications/deliver', express.json(), (req, res) => {
@@ -179,7 +180,8 @@ app.use('/api', (req, res, next) => {
   }
 }));
 
-app.listen(PORT, () => {
-  console.log(`[Express Gateway] Running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[Express Gateway] Running on http://0.0.0.0:${PORT}`);
   console.log(`[Express Gateway] Proxying backend requests to ${FASTAPI_URL}`);
 });
+

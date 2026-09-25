@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useFin } from '../FinContext';
 import { GoalCard } from './GoalCard';
-import { Plus, X, Landmark, Compass, Target, ArrowRight } from 'lucide-react';
+import { Plus, X, Landmark, Compass, Target, ArrowRight, Sparkles } from 'lucide-react';
 
 export const GoalsPage: React.FC = () => {
   const { goals, createGoal } = useFin();
@@ -85,10 +85,22 @@ export const GoalsPage: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {goals.map((goal) => (
-            <GoalCard key={goal.id} goal={goal} />
-          ))}
+        <div className="space-y-4">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/5 border border-emerald-500/20 flex items-center space-x-3 text-xs">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="text-slate-300">
+              <strong className="text-white font-semibold">AI Recommender Agent Active: </strong>
+              Each goal analyzes your transactions to calculate early milestone completion. Click <strong className="text-emerald-300">AI Goal Accelerator</strong> on any goal to view and apply recommendations.
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {goals.map((goal) => (
+              <GoalCard key={goal.id} goal={goal} />
+            ))}
+          </div>
         </div>
       )}
 

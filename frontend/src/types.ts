@@ -51,6 +51,28 @@ export interface Goal {
   category: string;
 }
 
+export interface GoalRecommendationItem {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  impact: string;
+  monthly_savings: number;
+  priority: string;
+  badge: string;
+}
+
+export interface GoalRecommendationData {
+  goal_id: number | string;
+  goal_name: string;
+  remaining_amount: number;
+  current_timeline_months: number;
+  optimized_timeline_months: number;
+  months_saved: number;
+  acceleration_pct: number;
+  recommendations: GoalRecommendationItem[];
+}
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'agent';

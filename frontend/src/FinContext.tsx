@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { apiFetch, clearToken, getToken, setToken } from './api';
-import { Anomaly, Category, ChatMessage, DashboardSummary, ForecastPoint, Goal, KycData, Subscription, Transaction, UserProfile } from './types';
+import { Anomaly, Category, ChatMessage, DashboardSummary, ForecastPoint, Goal, GoalRecommendationData, KycData, Subscription, Transaction, UserProfile } from './types';
 
 interface FinContextType {
   user: UserProfile | null;
@@ -29,6 +29,8 @@ interface FinContextType {
   commitCSV: (txs: Transaction[]) => Promise<void>;
   createGoal: (goal: Omit<Goal, 'id' | 'currentAmount'>) => Promise<void>;
   contributeToGoal: (goalId: string, amount: number) => Promise<void>;
+  deleteGoal: (goalId: string | number) => Promise<boolean>;
+  fetchGoalRecommendations: (goalId: string | number) => Promise<GoalRecommendationData | null>;
   sendChatMessage: (text: string) => Promise<void>;
   getWeeklyDigest: () => Promise<string>;
   fetchKycStatus: () => Promise<void>;
@@ -322,6 +324,29 @@ export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const res = await apiFetch(`/goals/${goalId}/contribute`, { method: 'POST', body: JSON.stringify({ amount }) });
     if (!res.ok) throw new Error('Could not add contribution'); await refreshAllData();
   };
+  const deleteGoal = async (goalId: string | number): Promise<boolean> => {
+    try {
+      const res = await apiFetch(`/goals/${goalId}`, { method: 'DELETE' });
+      if (res.ok || res.status === 204) {
+        await refreshAllData();
+        return true;
+      }
+    } catch (err) {
+      console.error(`Failed to delete goal ${goalId}:`, err);
+    }
+    return false;
+  };
+  const fetchGoalRecommendations = async (goalId: string | number): Promise<GoalRecommendationData | null> => {
+    try {
+      const res = await apiFetch(`/goals/${goalId}/recommendations`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.error(`Failed to fetch recommendations for goal ${goalId}:`, err);
+    }
+    return null;
+  };
   const sendChatMessage = async (text: string) => {
     setIsChatLoading(true);
     const userMessage: ChatMessage = { id: `user-${Date.now()}`, sender: 'user', text, timestamp: new Date().toISOString() };
@@ -377,6 +402,8 @@ export const FinProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         commitCSV,
         createGoal,
         contributeToGoal,
+        deleteGoal,
+        fetchGoalRecommendations,
         sendChatMessage,
         getWeeklyDigest,
         fetchKycStatus,
